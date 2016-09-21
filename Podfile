@@ -23,3 +23,6 @@ target 'watchOS' do
 	platform :watchos, '2.0'
 
 end
+
+
+# TODO: Check https://github.com/NordicSemiconductor/IOS-Pods-DFU-Library and https://github.com/NordicSemiconductor/IOS-DFU-Library

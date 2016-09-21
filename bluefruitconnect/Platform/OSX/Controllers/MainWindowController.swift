@@ -32,7 +32,7 @@ class MainWindowController: NSWindowController {
         
         DLog("onClickScan: \(tag)")
         
-        let bleManager = BleManager.sharedInstance
+        let bleManager = BleManager2.sharedInstance
         if (tag == 0) {
             bleManager.startScan()
         }
@@ -44,7 +44,7 @@ class MainWindowController: NSWindowController {
     }
 
     func updateScanItems() {
-        let bleManager = BleManager.sharedInstance
+        let bleManager = BleManager2.sharedInstance
         let isScanning = bleManager.isScanning
         
         startScanItem.enabled = !isScanning

@@ -10,22 +10,27 @@ import Foundation
 
 class PeripheralList {
     private var lastUserSelectionTime = CFAbsoluteTimeGetCurrent()
-    private var selectedPeripheralIdentifier : String?
+    //private var selectedPeripheralIdentifier: String?
     
-    var blePeripherals : [String] {
-        return BleManager.sharedInstance.blePeripheralFoundAlphabeticKeys()
+    var blePeripherals: [String] {
+        return BleManager2.sharedInstance.blePeripheralFoundAlphabeticKeys()
     }
     
+    var blePeripheralsCount: Int {
+        return BleManager2.sharedInstance.blePeripheralsCount()
+    }
+    
+    /*
     var selectedPeripheralRow: Int? {
         return indexOfPeripheralIdentifier(selectedPeripheralIdentifier)
-    }
+    }*/
     
-    var elapsedTimeSinceSelection : CFAbsoluteTime {
+    var elapsedTimeSinceSelection: CFAbsoluteTime {
         return CFAbsoluteTimeGetCurrent() - self.lastUserSelectionTime
     }
     
     func indexOfPeripheralIdentifier(identifier : String?) -> Int? {
-        var result : Int?
+        var result: Int?
         if let identifier = identifier {
             result = blePeripherals.indexOf(identifier)
         }
@@ -33,60 +38,38 @@ class PeripheralList {
         return result
     }
     
-    func disconnected() {
-        // Check that is really disconnected
-        if BleManager.sharedInstance.blePeripheralConnected == nil {
-            selectedPeripheralIdentifier = nil
-           // DLog("Peripheral selected row: -1")
-            
-        }
+    func resetUserSelectionTime() {
+        lastUserSelectionTime = CFAbsoluteTimeGetCurrent()
     }
     
-    func connectToPeripheral(identifier : String?) {
-        let bleManager = BleManager.sharedInstance
+    /*
+    func connectToPeripheral(identifier: String?) {
+        let bleManager = BleManager2.sharedInstance
         
-        if (identifier != bleManager.blePeripheralConnected?.peripheral.identifier.UUIDString || identifier == nil) {
+        guard let identifier = identifier else {
+            selectedPeripheralIdentifier = nil
+            return
+        }
+        
+        if let blePeripheral = bleManager.blePeripheralWithUuid(identifier) {
             
-            //
-            let blePeripheralsFound = bleManager.blePeripherals()
-            lastUserSelectionTime = CFAbsoluteTimeGetCurrent()
-            
-            // Disconnect from previous
-            if let selectedRow = selectedPeripheralRow {
-                let peripherals = blePeripherals
-                if selectedRow < peripherals.count {      // To avoid problems with peripherals disconnecting
-                    let selectedBlePeripheralIdentifier = peripherals[selectedRow];
-                    let blePeripheral = blePeripheralsFound[selectedBlePeripheralIdentifier]!
-                    
-                    BleManager.sharedInstance.disconnect(blePeripheral)
-                }
-                //DLog("Peripheral selected row: -1")
-                selectedPeripheralIdentifier = nil
+            if blePeripheral.state != .Connected {
+                // Connect to new peripheral
+                bleManager.connect(blePeripheral)
             }
             
-            // Connect to new peripheral
-            if let selectedBlePeripheralIdentifier = identifier {
-                
-                let blePeripheral = blePeripheralsFound[selectedBlePeripheralIdentifier]!
-                if (BleManager.sharedInstance.blePeripheralConnected?.peripheral.identifier != selectedBlePeripheralIdentifier) {
-                    // DLog("connect to new peripheral: \(selectedPeripheralIdentifier)")
-                    
-                    BleManager.sharedInstance.connect(blePeripheral)
-                    
-                    selectedPeripheralIdentifier = selectedBlePeripheralIdentifier
-                }
-            }
-            else {
-                //DLog("Peripheral selected row: -1")
-                selectedPeripheralIdentifier = nil;
-            }
+            // Select peripheral
+            selectedPeripheralIdentifier = identifier
         }
     }
     
     func selectRow(row : Int ) {
+        lastUserSelectionTime = CFAbsoluteTimeGetCurrent()
+
         if (row != selectedPeripheralRow) {
             //DLog("Peripheral selected row: \(row)")
-            connectToPeripheral(row >= 0 ? blePeripherals[row] : nil)
+            connectToPeripheral(row >= 0 ? blePeripherals[row]: nil)
         }
     }
+ */
 }

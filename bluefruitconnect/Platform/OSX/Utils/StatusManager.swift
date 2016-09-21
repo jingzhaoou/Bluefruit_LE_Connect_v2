@@ -38,37 +38,36 @@ class StatusManager : NSObject {
         super.init()
         
         let defaultCenter = NSNotificationCenter.defaultCenter()
-        defaultCenter.addObserver(self, selector: #selector(StatusManager.updateStatus(_:)), name: BleManager.BleNotifications.DidUpdateBleState.rawValue, object: nil)
-        defaultCenter.addObserver(self, selector: #selector(StatusManager.updateStatus(_:)), name: BleManager.BleNotifications.DidStartScanning.rawValue, object: nil)
-        defaultCenter.addObserver(self, selector: #selector(StatusManager.updateStatus(_:)), name: BleManager.BleNotifications.WillConnectToPeripheral.rawValue, object: nil)
-        defaultCenter.addObserver(self, selector: #selector(StatusManager.updateStatus(_:)), name: BleManager.BleNotifications.DidConnectToPeripheral.rawValue, object: nil)
-        defaultCenter.addObserver(self, selector: #selector(StatusManager.updateStatus(_:)), name: BleManager.BleNotifications.WillDisconnectFromPeripheral.rawValue, object: nil)
-        defaultCenter.addObserver(self, selector: #selector(StatusManager.updateStatus(_:)), name: BleManager.BleNotifications.DidDisconnectFromPeripheral.rawValue, object: nil)
-        defaultCenter.addObserver(self, selector: #selector(StatusManager.updateStatus(_:)), name: BleManager.BleNotifications.DidStopScanning.rawValue, object: nil)
+        defaultCenter.addObserver(self, selector: #selector(updateStatus(_:)), name: BleManager2.BleNotifications.DidUpdateBleState.rawValue, object: nil)
+        defaultCenter.addObserver(self, selector: #selector(updateStatus(_:)), name: BleManager2.BleNotifications.DidStartScanning.rawValue, object: nil)
+        defaultCenter.addObserver(self, selector: #selector(updateStatus(_:)), name: BleManager2.BleNotifications.WillConnectToPeripheral.rawValue, object: nil)
+        defaultCenter.addObserver(self, selector: #selector(updateStatus(_:)), name: BleManager2.BleNotifications.DidConnectToPeripheral.rawValue, object: nil)
+        defaultCenter.addObserver(self, selector: #selector(updateStatus(_:)), name: BleManager2.BleNotifications.WillDisconnectFromPeripheral.rawValue, object: nil)
+        defaultCenter.addObserver(self, selector: #selector(updateStatus(_:)), name: BleManager2.BleNotifications.DidDisconnectFromPeripheral.rawValue, object: nil)
+        defaultCenter.addObserver(self, selector: #selector(updateStatus(_:)), name: BleManager.BleNotifications.DidStopScanning.rawValue, object: nil)
         
-        defaultCenter.addObserver(self, selector: #selector(StatusManager.updateStatus(_:)), name: BleManager.BleNotifications.DidDiscoverPeripheral.rawValue, object: nil)
-        defaultCenter.addObserver(self, selector: #selector(StatusManager.updateStatus(_:)), name: BleManager.BleNotifications.DidUnDiscoverPeripheral.rawValue, object: nil)
-        
+        defaultCenter.addObserver(self, selector: #selector(updateStatus(_:)), name: BleManager2.BleNotifications.DidDiscoverPeripheral.rawValue, object: nil)
+        defaultCenter.addObserver(self, selector: #selector(updateStatus(_:)), name: BleManager2.BleNotifications.DidUnDiscoverPeripheral.rawValue, object: nil)
     }
     
     deinit {
         let defaultCenter = NSNotificationCenter.defaultCenter()
-        defaultCenter.removeObserver(self, name: BleManager.BleNotifications.DidUpdateBleState.rawValue, object: nil)
-        defaultCenter.removeObserver(self, name: BleManager.BleNotifications.DidStartScanning.rawValue, object: nil)
-        defaultCenter.removeObserver(self, name: BleManager.BleNotifications.WillConnectToPeripheral.rawValue, object: nil)
-        defaultCenter.removeObserver(self, name: BleManager.BleNotifications.DidConnectToPeripheral.rawValue, object: nil)
-        defaultCenter.removeObserver(self, name: BleManager.BleNotifications.WillDisconnectFromPeripheral.rawValue, object: nil)
-        defaultCenter.removeObserver(self, name: BleManager.BleNotifications.DidDisconnectFromPeripheral.rawValue, object: nil)
-        defaultCenter.removeObserver(self, name: BleManager.BleNotifications.DidStopScanning.rawValue, object: nil)
-        defaultCenter.removeObserver(self, name: BleManager.BleNotifications.DidDiscoverPeripheral.rawValue, object: nil)
-        defaultCenter.removeObserver(self, name: BleManager.BleNotifications.DidUnDiscoverPeripheral.rawValue, object: nil)
+        defaultCenter.removeObserver(self, name: BleManager2.BleNotifications.DidUpdateBleState.rawValue, object: nil)
+        defaultCenter.removeObserver(self, name: BleManager2.BleNotifications.DidStartScanning.rawValue, object: nil)
+        defaultCenter.removeObserver(self, name: BleManager2.BleNotifications.WillConnectToPeripheral.rawValue, object: nil)
+        defaultCenter.removeObserver(self, name: BleManager2.BleNotifications.DidConnectToPeripheral.rawValue, object: nil)
+        defaultCenter.removeObserver(self, name: BleManager2.BleNotifications.WillDisconnectFromPeripheral.rawValue, object: nil)
+        defaultCenter.removeObserver(self, name: BleManager2.BleNotifications.DidDisconnectFromPeripheral.rawValue, object: nil)
+        defaultCenter.removeObserver(self, name: BleManager2.BleNotifications.DidStopScanning.rawValue, object: nil)
+        defaultCenter.removeObserver(self, name: BleManager2.BleNotifications.DidDiscoverPeripheral.rawValue, object: nil)
+        defaultCenter.removeObserver(self, name: BleManager2.BleNotifications.DidUnDiscoverPeripheral.rawValue, object: nil)
     }
     
-    func updateStatus(notification : NSNotification) {
-        let bleManager = BleManager.sharedInstance
+    func updateStatus(notification: NSNotification) {
+        let bleManager = BleManager2.sharedInstance
         let isUpdating = updateDialogViewController != nil
-        let isConnected = bleManager.blePeripheralConnected != nil
-        let isConnecting = bleManager.blePeripheralConnecting != nil
+        let isConnected = bleManager.connectedPeripherals().count > 0
+        let isConnecting = bleManager.connectingPeripherals().count > 0
         let isScanning = bleManager.isScanning
         
         if (isUpdating) {
@@ -109,20 +108,16 @@ class StatusManager : NSObject {
     func statusDescription() -> String {
         
         var message = ""
-        let bleManager = BleManager.sharedInstance
+        let bleManager = BleManager2.sharedInstance
         
         switch (status) {
         case .Updating:
             message = "Updating Firmware"
         case .Connected:
-            if let name = bleManager.blePeripheralConnected?.name {
-                message = "Connected to \(name)"
-            }
-            else {
-                message = "Connected"
-            }
+            let connectedCount = bleManager.connectedPeripherals().count
+            message = connectedCount == 1 ? "Connected to a peripheral" : "Connected to \(connectedCount) peripherals"
         case .Connecting:
-            if let name = bleManager.blePeripheralConnecting?.name {
+            if let name = bleManager.connectingPeripherals().first?.1.name {
                 message = "Connecting to \(name)..."
             }
             else {

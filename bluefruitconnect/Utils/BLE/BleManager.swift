@@ -9,7 +9,7 @@
 import Foundation
 import CoreBluetooth
 
-class BleManager : NSObject, CBCentralManagerDelegate {
+class BleManager: NSObject, CBCentralManagerDelegate {
     
     // Configuration
     static let kStopScanningWhenConnectingToPeripheral = false
@@ -21,7 +21,7 @@ class BleManager : NSObject, CBCentralManagerDelegate {
     static let kUndiscoverPeripheralConsideredOutOfRangeTime = 50.0      // in seconds
     
     // Notifications
-    enum BleNotifications : String {
+    enum BleNotifications: String {
         case DidUpdateBleState = "didUpdateBleState"
         case DidStartScanning = "didStartScanning"
         case DidStopScanning = "didStopScanning"
@@ -169,7 +169,7 @@ class BleManager : NSObject, CBCentralManagerDelegate {
                     if elapsedTime > BleManager.kUndiscoverPeripheralConsideredOutOfRangeTime {
                         DLog("undiscovered peripheral: \(blePeripheral.name)")
                         self.blePeripheralsFound.removeValueForKey(identifier)
-                        NSNotificationCenter.defaultCenter().postNotificationName(BleNotifications.DidUnDiscoverPeripheral.rawValue, object: nil, userInfo: ["uuid" : identifier]);
+                        NSNotificationCenter.defaultCenter().postNotificationName(BleNotifications.DidUnDiscoverPeripheral.rawValue, object: nil, userInfo: ["uuid": identifier]);
                     }
                 }
                 //            let elapsedFormatted = String(format:"%.2f", elapsedTime)

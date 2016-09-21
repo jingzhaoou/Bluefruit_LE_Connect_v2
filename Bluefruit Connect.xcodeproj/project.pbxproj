@@ -36,6 +36,10 @@
 		A92088B41C7357D5002FF8E8 /* StyleConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = A92088B31C7357D5002FF8E8 /* StyleConfig.swift */; };
 		A92088B61C73910D002FF8E8 /* UIImage+Color.swift in Sources */ = {isa = PBXBuildFile; fileRef = A92088B51C73910D002FF8E8 /* UIImage+Color.swift */; };
 		A92883CB1C5AF8DF00CC1566 /* PeripheralTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = A92883CA1C5AF8DF00CC1566 /* PeripheralTableViewCell.swift */; };
+		A92B0F181D86DF5800546C6D /* BleManager2.swift in Sources */ = {isa = PBXBuildFile; fileRef = A92B0F171D86DF5800546C6D /* BleManager2.swift */; };
+		A92B0F191D86DF5800546C6D /* BleManager2.swift in Sources */ = {isa = PBXBuildFile; fileRef = A92B0F171D86DF5800546C6D /* BleManager2.swift */; };
+		A92B0F1B1D86E24400546C6D /* BlePeripheral2.swift in Sources */ = {isa = PBXBuildFile; fileRef = A92B0F1A1D86E24400546C6D /* BlePeripheral2.swift */; };
+		A92B0F1C1D86E24400546C6D /* BlePeripheral2.swift in Sources */ = {isa = PBXBuildFile; fileRef = A92B0F1A1D86E24400546C6D /* BlePeripheral2.swift */; };
 		A92D91B71D01ABC500CAB0E5 /* XMLDictionary.m in Sources */ = {isa = PBXBuildFile; fileRef = A9FE75721BB9CF1000F7A5BF /* XMLDictionary.m */; };
 		A92E06761C6D136100BECBBA /* MqttSettingsStatusCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = A92E06751C6D136100BECBBA /* MqttSettingsStatusCell.swift */; };
 		A92E06781C6D15A300BECBBA /* MqttSettingsHeaderCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = A92E06771C6D15A300BECBBA /* MqttSettingsHeaderCell.swift */; };
@@ -288,6 +292,8 @@
 		A92088B31C7357D5002FF8E8 /* StyleConfig.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StyleConfig.swift; sourceTree = "<group>"; };
 		A92088B51C73910D002FF8E8 /* UIImage+Color.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIImage+Color.swift"; sourceTree = "<group>"; };
 		A92883CA1C5AF8DF00CC1566 /* PeripheralTableViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PeripheralTableViewCell.swift; sourceTree = "<group>"; };
+		A92B0F171D86DF5800546C6D /* BleManager2.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BleManager2.swift; sourceTree = "<group>"; };
+		A92B0F1A1D86E24400546C6D /* BlePeripheral2.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BlePeripheral2.swift; sourceTree = "<group>"; };
 		A92E06751C6D136100BECBBA /* MqttSettingsStatusCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MqttSettingsStatusCell.swift; sourceTree = "<group>"; };
 		A92E06771C6D15A300BECBBA /* MqttSettingsHeaderCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MqttSettingsHeaderCell.swift; sourceTree = "<group>"; };
 		A92E06791C6D18DF00BECBBA /* MqttSettingsValueAndSelector.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MqttSettingsValueAndSelector.swift; sourceTree = "<group>"; };
@@ -590,6 +596,8 @@
 		A94370AA1BB6493A002521F7 /* BLE */ = {
 			isa = PBXGroup;
 			children = (
+				A92B0F171D86DF5800546C6D /* BleManager2.swift */,
+				A92B0F1A1D86E24400546C6D /* BlePeripheral2.swift */,
 				A94370AB1BB6493A002521F7 /* BleManager.swift */,
 				A94370AC1BB6493A002521F7 /* BlePeripheral.swift */,
 				A92088AC1C72692B002FF8E8 /* BleUUIDNames.swift */,
@@ -1407,8 +1415,10 @@
 				A96567501C7E25B0009DB0F4 /* NeopixelModuleManager.swift in Sources */,
 				A9EC0F9F1C6E99BF0019790F /* UartModuleManager.swift in Sources */,
 				A9675D8A1CFD19E60041A6F0 /* DeviceInfoData.m in Sources */,
+				A92B0F191D86DF5800546C6D /* BleManager2.swift in Sources */,
 				A9AF4E0F1CC63496002C1C12 /* NeopixelTypeSelectorViewController.swift in Sources */,
 				A94201F51C6A65B500C87989 /* DfuDialogViewController.swift in Sources */,
+				A92B0F1C1D86E24400546C6D /* BlePeripheral2.swift in Sources */,
 				A92E067A1C6D18DF00BECBBA /* MqttSettingsValueAndSelector.swift in Sources */,
 				A94535831C8540DB00DF49D7 /* PeripheralDetailsViewController.swift in Sources */,
 				A94F5A3D1C5AE252009CC9B8 /* HexConversions.swift in Sources */,
@@ -1478,6 +1488,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A949AA7C1C5AC977002F960B /* PeripheralListViewController.swift in Sources */,
+				A92B0F181D86DF5800546C6D /* BleManager2.swift in Sources */,
 				A94370D01BB64959002521F7 /* DFUOperations.m in Sources */,
 				A94370CF1BB64959002521F7 /* BLEOperations.m in Sources */,
 				A94370D31BB64959002521F7 /* IntelHex2BinConverter.m in Sources */,
@@ -1514,6 +1525,7 @@
 				A949AA771C5AC977002F960B /* FirmwareUpdateViewController.swift in Sources */,
 				A94370BA1BB6493A002521F7 /* BleManager.swift in Sources */,
 				A94F5A591C5AF1CA009CC9B8 /* StatusManager.swift in Sources */,
+				A92B0F1B1D86E24400546C6D /* BlePeripheral2.swift in Sources */,
 				A9941C1B1C812D6600AD4016 /* Color+DarkerLighter.swift in Sources */,
 				A949AA7A1C5AC977002F960B /* MainWindowController.swift in Sources */,
 				A9EC0F961C6E99BF0019790F /* PeripheralList.swift in Sources */,

@@ -33,6 +33,9 @@ https://learn.adafruit.com/getting-started-with-the-nrf8001-bluefruit-le-breakou
 "peripherallist_uartunavailable" = "No Uart detected";
 "peripherallist_peripheraldisconnected" = "Peripheral disconnected";
 "peripherallist_unnamed" = "{No Name}";
+"peripherallist_connect" = "Connect";
+"peripherallist_connecting" = "Connecting...";
+"peripherallist_disconnect" = "Disconnect";
 
 // Peripheral Details
 "peripheraldetails_select" = "Connect to a peripheral from the list on the left";
@@ -253,6 +256,8 @@ Note: Any activated sensor data streams will continue while using the Control Pa
 • Adjust overall brightness as desired using the Brightness slider";
 "neopixel_sketch_tooltip" = "Neopixel support requires a custom sketch to be running on your Arduino. You can export this sketch from the app by clicking the INFO icon in the top-right corner.";
 
+// Calibration
+"calibration_tab_title" = "Calibration";
 
 // Common
 "dialog_ok" = "Ok";

@@ -1005,6 +1005,7 @@
                         <autoresizingMask key="autoresizingMask"/>
                     </splitView>
                     <connections>
+                        <outlet property="view" destination="sYb-at-03Y" id="p9a-Op-uCA"/>
                         <segue destination="dsX-rY-pka" kind="relationship" relationship="splitItems" id="wtb-d6-Bjy"/>
                         <segue destination="4Hc-mo-q0e" kind="relationship" relationship="splitItems" id="dOy-dQ-e1N"/>
                     </connections>
@@ -1098,7 +1099,7 @@
                                                                     <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="signalstrength0" id="pgP-hZ-ItO"/>
                                                                 </imageView>
                                                                 <textField horizontalHuggingPriority="249" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="eZv-Ay-ncE">
-                                                                    <rect key="frame" x="42" y="16" width="373" height="17"/>
+                                                                    <rect key="frame" x="42" y="16" width="312" height="17"/>
                                                                     <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="Table View Cell" id="vdL-Vq-ouf">
                                                                         <font key="font" metaFont="system"/>
                                                                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -1106,21 +1107,21 @@
                                                                     </textFieldCell>
                                                                 </textField>
                                                                 <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="2uK-kK-Wnf">
-                                                                    <rect key="frame" x="417" y="19" width="24" height="25"/>
+                                                                    <rect key="frame" x="356" y="-12" width="85" height="87"/>
                                                                     <constraints>
                                                                         <constraint firstAttribute="width" secondItem="2uK-kK-Wnf" secondAttribute="height" multiplier="1:1" id="C6o-Rw-GWj"/>
-                                                                        <constraint firstAttribute="width" constant="24" id="oxG-Zg-Iwy"/>
+                                                                        <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="85" id="oxG-Zg-Iwy"/>
                                                                     </constraints>
-                                                                    <buttonCell key="cell" type="recessed" bezelStyle="recessed" image="NSStopProgressTemplate" imagePosition="only" alignment="center" borderStyle="border" imageScaling="proportionallyUpOrDown" inset="2" id="dhZ-oD-BOS">
+                                                                    <buttonCell key="cell" type="roundRect" title="Connect" bezelStyle="roundedRect" imagePosition="left" alignment="center" borderStyle="border" inset="2" id="dhZ-oD-BOS">
                                                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                                                        <font key="font" metaFont="systemBold" size="12"/>
+                                                                        <font key="font" metaFont="cellTitle"/>
+                                                                        <connections>
+                                                                            <action selector="onClickConnectAction:" target="y2s-Zr-cca" id="STs-yM-YDx"/>
+                                                                        </connections>
                                                                     </buttonCell>
-                                                                    <connections>
-                                                                        <action selector="onClickDisconnect:" target="y2s-Zr-cca" id="PxV-Yk-jsX"/>
-                                                                    </connections>
                                                                 </button>
                                                                 <textField horizontalHuggingPriority="249" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="SEp-Qe-jTH">
-                                                                    <rect key="frame" x="42" y="33" width="373" height="19"/>
+                                                                    <rect key="frame" x="42" y="33" width="312" height="19"/>
                                                                     <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="Table View Cell" id="fXb-76-luh">
                                                                         <font key="font" metaFont="system" size="15"/>
                                                                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -1141,8 +1142,7 @@
                                                                 <constraint firstItem="2uK-kK-Wnf" firstAttribute="leading" secondItem="SEp-Qe-jTH" secondAttribute="trailing" constant="4" id="zNl-BV-vcL"/>
                                                             </constraints>
                                                             <connections>
-                                                                <outlet property="disconnectButton" destination="2uK-kK-Wnf" id="yzX-PS-fAa"/>
-                                                                <outlet property="disconnectButtonWidthConstraint" destination="oxG-Zg-Iwy" id="JfT-Mc-8TG"/>
+                                                                <outlet property="connectButton" destination="2uK-kK-Wnf" id="dm9-hJ-PC8"/>
                                                                 <outlet property="rssiImageView" destination="rOO-CC-RiV" id="iz7-bb-vpd"/>
                                                                 <outlet property="subtitleTextField" destination="eZv-Ay-ncE" id="DCi-iL-S6d"/>
                                                                 <outlet property="textField" destination="SEp-Qe-jTH" id="Tne-hB-IQU"/>
@@ -2724,7 +2724,6 @@ Gw
     <resources>
         <image name="NSRefreshTemplate" width="11" height="15"/>
         <image name="NSStatusPartiallyAvailable" width="16" height="16"/>
-        <image name="NSStopProgressTemplate" width="11" height="11"/>
         <image name="NSStopTemplate" width="11" height="11"/>
         <image name="adaflower_osxtablebackground" width="57" height="57"/>
         <image name="ic_bluetooth_disabled" width="24" height="24"/>

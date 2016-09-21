@@ -10,7 +10,7 @@ import Cocoa
 
 class MainSplitViewController: NSSplitViewController {
 
-    let kMinSplitDividerPosition : CGFloat  = 200
+    let kMinSplitDividerPosition: CGFloat = 200
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -19,8 +19,13 @@ class MainSplitViewController: NSSplitViewController {
         // http://stackoverflow.com/questions/16587058/nssplitview-auto-saving-divider-positions-doesnt-work-with-auto-layout-enable
         splitView.autosaveName = "Main Split View"
         
+        // Setup controllers master-detail
+        let peripheralListViewController = splitViewItems.first!.viewController as! PeripheralListViewController
+        let detailsViewController = splitViewItems.last!.viewController as! DetailsViewController
+        peripheralListViewController.detailsViewController = detailsViewController
+        
         // Start scanning
-        BleManager.sharedInstance.startScan()
+        BleManager2.sharedInstance.startScan()
     }
     
     override func splitView(splitView: NSSplitView,
