@@ -14,16 +14,16 @@ class DfuModuleViewController: ModuleViewController {
     @IBOutlet weak var firmwareTableView: UITableView!
 
     // Data
-    private var blePeripheral: BlePeripheral!
-    private let firmwareUpdater = FirmwareUpdater()
-    private let dfuUpdateProcess = DfuUpdateProcess()
-    private var dfuDialogViewController: DfuDialogViewController!
+    fileprivate var blePeripheral: BlePeripheral!
+    fileprivate let firmwareUpdater = FirmwareUpdater()
+    fileprivate let dfuUpdateProcess = DfuUpdateProcess()
+    fileprivate var dfuDialogViewController: DfuDialogViewController!
    
-    private var boardRelease : BoardInfo?
-    private var deviceInfoData : DeviceInfoData?
-    private var allReleases: [NSObject: AnyObject]?
+    fileprivate var boardRelease : BoardInfo?
+    fileprivate var deviceInfoData : DeviceInfoData?
+    fileprivate var allReleases: [AnyHashable: Any]?
 
-    private var isCheckingUpdates = false
+    fileprivate var isCheckingUpdates = false
 
     //private let uartManager = UartManager.sharedInstance
 
@@ -100,8 +100,8 @@ class DfuModuleViewController: ModuleViewController {
         // Refresh updates available
         if !isCheckingUpdates {
             isCheckingUpdates = true
-            let releases = FirmwareUpdater.releasesWithBetaVersions(Preferences.showBetaVersions)
-            firmwareUpdater.checkUpdatesForPeripheral(blePeripheral.peripheral, delegate: self, shouldDiscoverServices: false, releases: releases, shouldRecommendBetaReleases: false)
+            let releases = FirmwareUpdater.releases(withBetaVersions: Preferences.showBetaVersions)
+            firmwareUpdater.checkUpdates(for: blePeripheral.peripheral, delegate: self, shouldDiscoverServices: false, releases: releases, shouldRecommendBetaReleases: false)
         }
     }
     
@@ -116,15 +116,15 @@ class DfuModuleViewController: ModuleViewController {
     }*/
     
     // MARK: - Actions
-    @IBAction func onClickHelp(sender: UIBarButtonItem) {
+    @IBAction func onClickHelp(_ sender: UIBarButtonItem) {
         let localizationManager = LocalizationManager.sharedInstance
-        let helpViewController = storyboard!.instantiateViewControllerWithIdentifier("HelpViewController") as! HelpViewController
+        let helpViewController = storyboard!.instantiateViewController(withIdentifier: "HelpViewController") as! HelpViewController
         helpViewController.setHelp(localizationManager.localizedString("dfu_help_text"), title: localizationManager.localizedString("dfu_help_title"))
         let helpNavigationController = UINavigationController(rootViewController: helpViewController)
-        helpNavigationController.modalPresentationStyle = .Popover
+        helpNavigationController.modalPresentationStyle = .popover
         helpNavigationController.popoverPresentationController?.barButtonItem = sender
         
-        presentViewController(helpNavigationController, animated: true, completion: nil)
+        present(helpNavigationController, animated: true, completion: nil)
     }
 
     /*
@@ -140,54 +140,54 @@ class DfuModuleViewController: ModuleViewController {
         }
     }*/
     
-    func preferencesUpdated(notification : NSNotification) {
+    func preferencesUpdated(_ notification : Notification) {
         // Reload updates
         if let blePeripheral = BleManager.sharedInstance.blePeripheralConnected {
-            let releases = FirmwareUpdater.releasesWithBetaVersions(Preferences.showBetaVersions)
-            firmwareUpdater.checkUpdatesForPeripheral(blePeripheral.peripheral, delegate: self, shouldDiscoverServices: false, releases: releases, shouldRecommendBetaReleases: false)
+            let releases = FirmwareUpdater.releases(withBetaVersions: Preferences.showBetaVersions)
+            firmwareUpdater.checkUpdates(for: blePeripheral.peripheral, delegate: self, shouldDiscoverServices: false, releases: releases, shouldRecommendBetaReleases: false)
         }
     }
 
     // MARK: - DFU update
-    func confirmDfuUpdateWithFirmware(firmwareInfo : FirmwareInfo) {
+    func confirmDfuUpdateWithFirmware(_ firmwareInfo : FirmwareInfo) {
         let localizationManager = LocalizationManager.sharedInstance
 
         let compareBootloader = deviceInfoData!.bootloaderVersion().caseInsensitiveCompare(firmwareInfo.minBootloaderVersion)
-        if (compareBootloader == .OrderedDescending || compareBootloader == .OrderedSame) {        // Requeriments met
+        if (compareBootloader == .orderedDescending || compareBootloader == .orderedSame) {        // Requeriments met
             
             let alertTitle = String(format: localizationManager.localizedString("dfu_install_action_title_format"), arguments: [firmwareInfo.version])
-            let alertController = UIAlertController(title: alertTitle, message: localizationManager.localizedString("dfu_install_action_message"), preferredStyle: .Alert)
-            let okAction = UIAlertAction(title: localizationManager.localizedString("dialog_ok"), style: .Default) { (action) in
+            let alertController = UIAlertController(title: alertTitle, message: localizationManager.localizedString("dfu_install_action_message"), preferredStyle: .alert)
+            let okAction = UIAlertAction(title: localizationManager.localizedString("dialog_ok"), style: .default) { (action) in
                  self.startDfuUpdateWithFirmware(firmwareInfo)
             }
             alertController.addAction(okAction)
-            let cancelAction = UIAlertAction(title: localizationManager.localizedString("dialog_cancel"), style: .Cancel, handler: nil)
+            let cancelAction = UIAlertAction(title: localizationManager.localizedString("dialog_cancel"), style: .cancel, handler: nil)
             alertController.addAction(cancelAction)
-            self.presentViewController(alertController, animated: true, completion: nil)
+            self.present(alertController, animated: true, completion: nil)
         }
         else {      // Requeriments not met
             let message = String(format: localizationManager.localizedString("dfu_unabletoupdate_bootloader_format"), arguments: [firmwareInfo.version])
-            let alertController = UIAlertController(title: nil, message: message, preferredStyle: .Alert)
+            let alertController = UIAlertController(title: nil, message: message, preferredStyle: .alert)
                         
-            let okAction = UIAlertAction(title: localizationManager.localizedString("dialog_ok"), style: .Default, handler: nil)
+            let okAction = UIAlertAction(title: localizationManager.localizedString("dialog_ok"), style: .default, handler: nil)
             alertController.addAction(okAction)
-            self.presentViewController(alertController, animated: true, completion: nil)
+            self.present(alertController, animated: true, completion: nil)
         }
     }
     
-    func startDfuUpdateWithFirmware(firmwareInfo : FirmwareInfo) {
-        let hexUrl = NSURL(string: firmwareInfo.hexFileUrl)!
-        let iniUrl =  NSURL(string: firmwareInfo.iniFileUrl)
+    func startDfuUpdateWithFirmware(_ firmwareInfo : FirmwareInfo) {
+        let hexUrl = URL(string: firmwareInfo.hexFileUrl)!
+        let iniUrl =  URL(string: firmwareInfo.iniFileUrl)
         startDfuUpdateWithHexInitFiles(hexUrl, iniUrl: iniUrl)
     }
     
-    func startDfuUpdateWithHexInitFiles(hexUrl : NSURL, iniUrl: NSURL?) {
+    func startDfuUpdateWithHexInitFiles(_ hexUrl : URL, iniUrl: URL?) {
         if let blePeripheral = BleManager.sharedInstance.blePeripheralConnected {
   
             // Show dialog
-            dfuDialogViewController = self.storyboard!.instantiateViewControllerWithIdentifier("DfuDialogViewController") as! DfuDialogViewController
+            dfuDialogViewController = self.storyboard!.instantiateViewController(withIdentifier: "DfuDialogViewController") as! DfuDialogViewController
             dfuDialogViewController.delegate = self
-            self.presentViewController(dfuDialogViewController, animated: true, completion: { [unowned self] () -> Void in
+            self.present(dfuDialogViewController, animated: true, completion: { [unowned self] () -> Void in
                 // Setup update process
                 self.dfuUpdateProcess.delegate = self
                 self.dfuUpdateProcess.startUpdateForPeripheral(blePeripheral.peripheral, hexUrl: hexUrl, iniUrl:iniUrl, deviceInfoData: self.deviceInfoData!)
@@ -201,7 +201,7 @@ class DfuModuleViewController: ModuleViewController {
 
 // MARK: - FirmwareUpdaterDelegate
 extension DfuModuleViewController: FirmwareUpdaterDelegate {
-    func onFirmwareUpdatesAvailable(isUpdateAvailable: Bool, latestRelease: FirmwareInfo!, deviceInfoData: DeviceInfoData?, allReleases: [NSObject : AnyObject]?) {
+    func onFirmwareUpdatesAvailable(_ isUpdateAvailable: Bool, latestRelease: FirmwareInfo!, deviceInfoData: DeviceInfoData?, allReleases: [AnyHashable: Any]?) {
         DLog("onFirmwareUpdatesAvailable")
         
         self.deviceInfoData = deviceInfoData
@@ -221,7 +221,7 @@ extension DfuModuleViewController: FirmwareUpdaterDelegate {
         }
         
         // Update UI
-        dispatch_async(dispatch_get_main_queue(),{ [unowned self] in
+        DispatchQueue.main.async(execute: { [unowned self] in
             
             if let deviceInfoData = deviceInfoData {
                 if deviceInfoData.hasDefaultBootloaderVersion() {
@@ -239,21 +239,21 @@ extension DfuModuleViewController: FirmwareUpdaterDelegate {
         onUpdateProcessError(LocalizationManager.sharedInstance.localizedString("dfu_dfunotavailable"), infoMessage: nil)
     }
     
-    private func onUpdateDialogError(errorMessage:String, exitOnDismiss: Bool = false) {
+    fileprivate func onUpdateDialogError(_ errorMessage:String, exitOnDismiss: Bool = false) {
         if presentedViewController == nil {
             let localizationManager = LocalizationManager.sharedInstance
-            let alertController = UIAlertController(title: nil, message: errorMessage, preferredStyle: .Alert)
+            let alertController = UIAlertController(title: nil, message: errorMessage, preferredStyle: .alert)
             
             let handler = { [unowned self] (_: UIAlertAction) -> () in
                 if exitOnDismiss {
                     DLog("dismiss dfu")
-                    self.tabBarController?.navigationController?.popViewControllerAnimated(true)
+                    self.tabBarController?.navigationController?.popViewController(animated: true)
                 }
             }
-            let okAction = UIAlertAction(title: localizationManager.localizedString("dialog_ok"), style: .Default, handler:handler)
+            let okAction = UIAlertAction(title: localizationManager.localizedString("dialog_ok"), style: .default, handler:handler)
             alertController.addAction(okAction)
             
-            self.presentViewController(alertController, animated: true, completion: nil)
+            self.present(alertController, animated: true, completion: nil)
         }
     }
 }
@@ -262,20 +262,20 @@ extension DfuModuleViewController: FirmwareUpdaterDelegate {
 extension DfuModuleViewController: UITableViewDataSource {
     
     enum DfuSection : Int  {
-        case CurrentVersion = 0
-        case FirmwareReleases = 1
-        case BootloaderReleases = 2
+        case currentVersion = 0
+        case firmwareReleases = 1
+        case bootloaderReleases = 2
     }
     
-    func numberOfSectionsInTableView(tableView: UITableView) -> Int {
+    func numberOfSections(in tableView: UITableView) -> Int {
         return 2
     }
     
-    func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         switch DfuSection(rawValue: section)! {
-        case .CurrentVersion:
+        case .currentVersion:
             return 1
-        case .FirmwareReleases:
+        case .firmwareReleases:
             var numRows = 1      // at least a custom firmware button
             if let firmwareReleases = boardRelease?.firmwareReleases {
                 numRows += firmwareReleases.count
@@ -294,14 +294,14 @@ extension DfuModuleViewController: UITableViewDataSource {
         }
     }
     
-    func tableView(tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         
         var localizationKey: String!
         
         switch DfuSection(rawValue: section)! {
-        case .CurrentVersion:
+        case .currentVersion:
             localizationKey = "dfu_currentversion_title"
-        case .FirmwareReleases:
+        case .firmwareReleases:
             localizationKey = "dfu_firmwarereleases_title"
         default:
             localizationKey = "dfu_bootloaderreleases_title"
@@ -310,31 +310,31 @@ extension DfuModuleViewController: UITableViewDataSource {
         return LocalizationManager.sharedInstance.localizedString(localizationKey)
     }
     
-    func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
         var cell: UITableViewCell!
         switch DfuSection(rawValue: indexPath.section)! {
             
-        case .CurrentVersion:
+        case .currentVersion:
             let reuseIdentifier = "PeripheralCell"
-            cell = tableView.dequeueReusableCellWithIdentifier(reuseIdentifier)
+            cell = tableView.dequeueReusableCell(withIdentifier: reuseIdentifier)
             if cell == nil {
-                cell = UITableViewCell(style: .Subtitle, reuseIdentifier: reuseIdentifier)
+                cell = UITableViewCell(style: .subtitle, reuseIdentifier: reuseIdentifier)
             }
             
             
         default:
-            let isLastRow = indexPath.row == tableView.numberOfRowsInSection(indexPath.section)-1
+            let isLastRow = indexPath.row == tableView.numberOfRows(inSection: indexPath.section)-1
             if isLastRow {
                 let reuseIdentifier = "FilesPickerCell"
-                cell = tableView.dequeueReusableCellWithIdentifier(reuseIdentifier, forIndexPath: indexPath)
+                cell = tableView.dequeueReusableCell(withIdentifier: reuseIdentifier, for: indexPath)
                 
             }
             else {
                 let reuseIdentifier = "FirmwareCell"
-                cell = tableView.dequeueReusableCellWithIdentifier(reuseIdentifier)
+                cell = tableView.dequeueReusableCell(withIdentifier: reuseIdentifier)
                 if cell == nil {
-                    cell = UITableViewCell(style: .Subtitle, reuseIdentifier: reuseIdentifier)
+                    cell = UITableViewCell(style: .subtitle, reuseIdentifier: reuseIdentifier)
                 }
             }
         }
@@ -342,33 +342,33 @@ extension DfuModuleViewController: UITableViewDataSource {
         return cell
     }
     
-    func tableView(tableView: UITableView, willDisplayCell cell: UITableViewCell, forRowAtIndexPath indexPath: NSIndexPath) {
+    func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
         let localizationManager = LocalizationManager.sharedInstance
 
         switch DfuSection(rawValue: indexPath.section)! {
-        case .CurrentVersion:
+        case .currentVersion:
             var firmwareString : String?
             if let softwareRevision = deviceInfoData?.softwareRevision {
                 firmwareString = String(format: localizationManager.localizedString("dfu_firmware_format"), arguments: [softwareRevision])
             }
             cell.textLabel!.text = blePeripheral.name
-            cell.textLabel!.backgroundColor = UIColor.clearColor()
+            cell.textLabel!.backgroundColor = UIColor.clear
             cell.detailTextLabel!.text = firmwareString
-            cell.detailTextLabel!.backgroundColor = UIColor.clearColor()
+            cell.detailTextLabel!.backgroundColor = UIColor.clear
             
             cell.contentView.backgroundColor = UIColor(hex: 0xeeeeee)
-            cell.selectionStyle = .None
+            cell.selectionStyle = .none
             
         default:
-            let isLastRow = indexPath.row == tableView.numberOfRowsInSection(indexPath.section)-1
+            let isLastRow = indexPath.row == tableView.numberOfRows(inSection: indexPath.section)-1
             if isLastRow {  // User files
                 let pickerCell = cell as! DfuFilesPickerTableViewCell
                 pickerCell.onPickFiles = { [unowned self] in
-                    let viewController = self.storyboard!.instantiateViewControllerWithIdentifier("DfuFilesPickerDialogViewController") as! DfuFilesPickerDialogViewController
+                    let viewController = self.storyboard!.instantiateViewController(withIdentifier: "DfuFilesPickerDialogViewController") as! DfuFilesPickerDialogViewController
                     viewController.delegate = self
-                    self.presentViewController(viewController, animated: true, completion: nil)
+                    self.present(viewController, animated: true, completion: nil)
                 }
-                 cell.selectionStyle = .None
+                 cell.selectionStyle = .none
             }
             else {
                 let firmwareInfo = firmwareInfoForRow(indexPath.row)
@@ -378,13 +378,13 @@ extension DfuModuleViewController: UITableViewDataSource {
                 cell.detailTextLabel!.text = firmwareInfo.boardName
             }
             
-            cell.contentView.backgroundColor = UIColor.whiteColor()
-            cell.selectionStyle = isLastRow ? .None:.Blue
+            cell.contentView.backgroundColor = UIColor.white
+            cell.selectionStyle = isLastRow ? .none:.blue
 
         }
     }
     
-    private func firmwareInfoForRow(row: Int) -> FirmwareInfo {
+    fileprivate func firmwareInfoForRow(_ row: Int) -> FirmwareInfo {
         var firmwareInfo: FirmwareInfo!
         
         if let firmwareReleases: NSArray = boardRelease?.firmwareReleases {     // If showing releases for a specific board
@@ -396,15 +396,15 @@ extension DfuModuleViewController: UITableViewDataSource {
             var currentBoardIndex = 0
             while currentRow <= row {
                 
-                let sortedKeys = allReleases!.keys.sort({($0 as! String) < ($1 as! String)})        // Order alphabetically
+                let sortedKeys = allReleases!.keys.sorted(by: {($0 as! String) < ($1 as! String)})        // Order alphabetically
                 let currentKey = sortedKeys[currentBoardIndex]
                 let boardRelease = allReleases![currentKey] as! BoardInfo
                 
                 // order versions numerically
-                let firmwareReleases = boardRelease.firmwareReleases.sort({ (firmwareA, firmwareB) -> Bool in
+                let firmwareReleases = boardRelease.firmwareReleases.sorted(by: { (firmwareA, firmwareB) -> Bool in
                     let versionA = (firmwareA as! FirmwareInfo).version
                     let versionB = (firmwareB as! FirmwareInfo).version
-                    return versionA.compare(versionB, options: .NumericSearch) == .OrderedAscending
+                    return versionA!.compare(versionB!, options: .numeric) == .orderedAscending
                 })
                 
                 let numReleases = firmwareReleases.count
@@ -426,12 +426,12 @@ extension DfuModuleViewController: UITableViewDataSource {
 
 // MARK: UITableViewDelegate
 extension DfuModuleViewController: UITableViewDelegate {
-    func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let selectedRow = indexPath.row
         
         switch DfuSection(rawValue: indexPath.section)! {
             
-        case .FirmwareReleases:
+        case .firmwareReleases:
             if (selectedRow >= 0) {
                 if (deviceInfoData!.hasDefaultBootloaderVersion()) {
                     onUpdateProcessError(LocalizationManager.sharedInstance.localizedString("dfu_legacybootloader"), infoMessage: nil)
@@ -447,7 +447,7 @@ extension DfuModuleViewController: UITableViewDelegate {
         }
         
         
-        tableView .deselectRowAtIndexPath(indexPath, animated: true)
+        tableView .deselectRow(at: indexPath, animated: true)
     }
     
     
@@ -468,53 +468,53 @@ extension  DfuModuleViewController: DfuUpdateProcessDelegate {
     func onUpdateProcessSuccess() {
         
         if let dfuDialogViewController = self.dfuDialogViewController {
-            dfuDialogViewController.dismissViewControllerAnimated(false, completion: nil)
+            dfuDialogViewController.dismiss(animated: false, completion: nil)
         }
         
         BleManager.sharedInstance.restoreCentralManager()
         
         let localizationManager = LocalizationManager.sharedInstance
-        let alertController = UIAlertController(title: nil, message: localizationManager.localizedString("dfu_udaptedcompleted_message"), preferredStyle: .Alert)
+        let alertController = UIAlertController(title: nil, message: localizationManager.localizedString("dfu_udaptedcompleted_message"), preferredStyle: .alert)
         
-        let okAction = UIAlertAction(title: localizationManager.localizedString("dialog_ok"), style: .Default) { [unowned self] _ in
+        let okAction = UIAlertAction(title: localizationManager.localizedString("dialog_ok"), style: .default) { [unowned self] _ in
             self.gotoScanController()
         }
         alertController.addAction(okAction)
-        self.presentViewController(alertController, animated: true, completion: nil)
+        self.present(alertController, animated: true, completion: nil)
     }
     
-    private func gotoScanController() {
+    fileprivate func gotoScanController() {
         // Simulate disonnection to trigger the go back to scanning
-        NSNotificationCenter.defaultCenter().postNotificationName(BleManager.BleNotifications.DidDisconnectFromPeripheral.rawValue, object: nil,  userInfo: nil)
+        NotificationCenter.default.post(name: Notification.Name(rawValue: BleManager.BleNotifications.DidDisconnectFromPeripheral.rawValue), object: nil,  userInfo: nil)
         
     }
     
-    func onUpdateProcessError(errorMessage : String, infoMessage: String?) {
+    func onUpdateProcessError(_ errorMessage : String, infoMessage: String?) {
         BleManager.sharedInstance.restoreCentralManager()
         
         if let dfuDialogViewController = self.dfuDialogViewController {
-            dfuDialogViewController.dismissViewControllerAnimated(false, completion: nil)
+            dfuDialogViewController.dismiss(animated: false, completion: nil)
         }
         
         let localizationManager = LocalizationManager.sharedInstance
-        let alertController = UIAlertController(title: (infoMessage != nil ? errorMessage:nil), message: (infoMessage != nil ? infoMessage : errorMessage), preferredStyle: .Alert)
+        let alertController = UIAlertController(title: (infoMessage != nil ? errorMessage:nil), message: (infoMessage != nil ? infoMessage : errorMessage), preferredStyle: .alert)
         
-        let okAction = UIAlertAction(title: localizationManager.localizedString("dialog_ok"), style: .Default) { [weak self] _ in
+        let okAction = UIAlertAction(title: localizationManager.localizedString("dialog_ok"), style: .default) { [weak self] _ in
              self?.gotoScanController()
         }
         alertController.addAction(okAction)
-        self.presentViewController(alertController, animated: true, completion: nil)
+        self.present(alertController, animated: true, completion: nil)
     }
 
 
-    func onUpdateProgressText(message: String) {
-        dispatch_async(dispatch_get_main_queue(),{ [unowned self] in
+    func onUpdateProgressText(_ message: String) {
+        DispatchQueue.main.async(execute: { [unowned self] in
             self.dfuDialogViewController?.setProgressText(message)
             })
     }
     
-    func onUpdateProgressValue(progress : Double) {
-        dispatch_async(dispatch_get_main_queue(),{ [unowned self] in
+    func onUpdateProgressValue(_ progress : Double) {
+        DispatchQueue.main.async(execute: { [unowned self] in
             self.dfuDialogViewController?.setProgress(progress)
             })
     }
@@ -524,11 +524,11 @@ extension  DfuModuleViewController: DfuUpdateProcessDelegate {
 // MARK: - DfuUpdateProcessDelegate
 extension DfuModuleViewController: DfuFilesPickerDialogViewControllerDelegate {
 
-    func onFilesPickerStartUpdate(hexUrl: NSURL?, iniUrl: NSURL?) {
+    func onFilesPickerStartUpdate(_ hexUrl: URL?, iniUrl: URL?) {
         if let hexUrl = hexUrl {
             // Show dialog
-            dfuDialogViewController = self.storyboard!.instantiateViewControllerWithIdentifier("DfuDialogViewController") as! DfuDialogViewController
-            self.presentViewController(dfuDialogViewController, animated: true, completion: { [unowned self] () -> Void in
+            dfuDialogViewController = self.storyboard!.instantiateViewController(withIdentifier: "DfuDialogViewController") as! DfuDialogViewController
+            self.present(dfuDialogViewController, animated: true, completion: { [unowned self] () -> Void in
                 // Setup update process
                 self.dfuUpdateProcess.delegate = self
                 self.dfuUpdateProcess.startUpdateForPeripheral(self.blePeripheral.peripheral, hexUrl: hexUrl, iniUrl:iniUrl, deviceInfoData: self.deviceInfoData!)
@@ -536,11 +536,11 @@ extension DfuModuleViewController: DfuFilesPickerDialogViewControllerDelegate {
         }
         else {
             let localizationManager = LocalizationManager.sharedInstance
-            let alertController = UIAlertController(title: nil, message: "At least an Hex file should be selected", preferredStyle: .Alert)
+            let alertController = UIAlertController(title: nil, message: "At least an Hex file should be selected", preferredStyle: .alert)
             
-            let okAction = UIAlertAction(title: localizationManager.localizedString("dialog_ok"), style: .Default, handler: nil)
+            let okAction = UIAlertAction(title: localizationManager.localizedString("dialog_ok"), style: .default, handler: nil)
             alertController.addAction(okAction)
-            self.presentViewController(alertController, animated: true, completion: nil)
+            self.present(alertController, animated: true, completion: nil)
         }
     }
     

@@ -18,31 +18,31 @@ import Foundation
 @objc class Preferences: NSObject {                // will be used from objective-c so make it inherit from NSObject
     
     // Note: if these contanst change, update DefaultPreferences.plist
-    private static let appInSystemStatusBarKey = "AppInSystemStatusBar"
+    fileprivate static let appInSystemStatusBarKey = "AppInSystemStatusBar"
     
-    private static let scanFilterIsPanelOpenKey = "ScanFilterIsPanelOpen"
-    private static let scanFilterNameKey = "ScanFilterName"
-    private static let scanFilterIsNameExactKey = "ScanFilterIsNameExact"
-    private static let scanFilterIsNameCaseInsensitiveKey = "ScanFilterIsNameCaseInsensitive"
-    private static let scanFilterRssiValueKey = "ScanFilterRssiValue"
-    private static let scanFilterIsUnnamedEnabledKey = "ScanFilterIsUnnamedEnabled"
-    private static let scanFilterIsOnlyWithUartEnabledKey = "ScanFilterIsOnlyWithUartEnabled"
+    fileprivate static let scanFilterIsPanelOpenKey = "ScanFilterIsPanelOpen"
+    fileprivate static let scanFilterNameKey = "ScanFilterName"
+    fileprivate static let scanFilterIsNameExactKey = "ScanFilterIsNameExact"
+    fileprivate static let scanFilterIsNameCaseInsensitiveKey = "ScanFilterIsNameCaseInsensitive"
+    fileprivate static let scanFilterRssiValueKey = "ScanFilterRssiValue"
+    fileprivate static let scanFilterIsUnnamedEnabledKey = "ScanFilterIsUnnamedEnabled"
+    fileprivate static let scanFilterIsOnlyWithUartEnabledKey = "ScanFilterIsOnlyWithUartEnabled"
     
-    private static let updateServerUrlKey = "UpdateServerUrl"
-    private static let updateShowBetaVersionsKey = "UpdateShowBetaVersions"
-    private static let updateIgnoredVersionKey = "UpdateIgnoredVersion"
+    fileprivate static let updateServerUrlKey = "UpdateServerUrl"
+    fileprivate static let updateShowBetaVersionsKey = "UpdateShowBetaVersions"
+    fileprivate static let updateIgnoredVersionKey = "UpdateIgnoredVersion"
 
-    private static let infoRefreshOnLoadKey = "InfoRefreshOnLoad"
+    fileprivate static let infoRefreshOnLoadKey = "InfoRefreshOnLoad"
 
-    private static let uartReceivedDataColorKey = "UartReceivedDataColor"
-    private static let uartSentDataColorKey = "UartSentDataColor"
-    private static let uartIsDisplayModeTimestampKey = "UartIsDisplayModeTimestamp"
-    private static let uartIsInHexModeKey = "UartIsInHexMode"
-    private static let uartIsEchoEnabledKey = "UartIsEchoEnabled"
-    private static let uartIsAutomaticEolEnabledKey = "UartIsAutomaticEolEnabled"
-    private static let uartShowInvisibleCharsKey = "UartShowInvisibleChars"
+    fileprivate static let uartReceivedDataColorKey = "UartReceivedDataColor"
+    fileprivate static let uartSentDataColorKey = "UartSentDataColor"
+    fileprivate static let uartIsDisplayModeTimestampKey = "UartIsDisplayModeTimestamp"
+    fileprivate static let uartIsInHexModeKey = "UartIsInHexMode"
+    fileprivate static let uartIsEchoEnabledKey = "UartIsEchoEnabled"
+    fileprivate static let uartIsAutomaticEolEnabledKey = "UartIsAutomaticEolEnabled"
+    fileprivate static let uartShowInvisibleCharsKey = "UartShowInvisibleChars"
     
-    private static let neopixelIsSketchTooltipEnabledKey = "NeopixelIsSketchTooltipEnabledKey"
+    fileprivate static let neopixelIsSketchTooltipEnabledKey = "NeopixelIsSketchTooltipEnabledKey"
     
     enum PreferencesNotifications: String {
         case DidUpdatePreferences = "didUpdatePreferences"          // Note: used on some objective-c code, so when changed, update it
@@ -70,12 +70,12 @@ import Foundation
 
     static var scanFilterName: String? {
         get {
-            let defaults = NSUserDefaults.standardUserDefaults()
-            return defaults.stringForKey(Preferences.scanFilterNameKey)
+            let defaults = UserDefaults.standard
+            return defaults.string(forKey: Preferences.scanFilterNameKey)
         }
         set {
-            let defaults = NSUserDefaults.standardUserDefaults()
-            defaults.setObject(newValue, forKey: Preferences.scanFilterNameKey)
+            let defaults = UserDefaults.standard
+            defaults.set(newValue, forKey: Preferences.scanFilterNameKey)
         }
     }
     
@@ -99,13 +99,13 @@ import Foundation
 
     static var scanFilterRssiValue: Int? {
         get {
-            let defaults = NSUserDefaults.standardUserDefaults()
-            let rssiValue = defaults.integerForKey(Preferences.scanFilterRssiValueKey)
+            let defaults = UserDefaults.standard
+            let rssiValue = defaults.integer(forKey: Preferences.scanFilterRssiValueKey)
             return rssiValue >= 0 ? rssiValue:nil
         }
         set {
-            let defaults = NSUserDefaults.standardUserDefaults()
-            defaults.setInteger(newValue ?? -1, forKey: Preferences.scanFilterRssiValueKey)
+            let defaults = UserDefaults.standard
+            defaults.set(newValue ?? -1, forKey: Preferences.scanFilterRssiValueKey)
         }
     }
     
@@ -128,21 +128,21 @@ import Foundation
     }
     
     // MARK: - Firmware Updates
-    static var updateServerUrl: NSURL? {
+    static var updateServerUrl: URL? {
         get {
-            let defaults = NSUserDefaults.standardUserDefaults()
-            let urlString = defaults.stringForKey(Preferences.updateServerUrlKey)
+            let defaults = UserDefaults.standard
+            let urlString = defaults.string(forKey: Preferences.updateServerUrlKey)
             if let urlString = urlString {
-                return NSURL(string: urlString)
+                return URL(string: urlString)
             }
             else {
                 return nil
             }
         }
         set {
-            let defaults = NSUserDefaults.standardUserDefaults()
-            defaults.setObject(newValue?.absoluteString, forKey: Preferences.updateServerUrlKey)
-            NSNotificationCenter.defaultCenter().postNotificationName(PreferencesNotifications.DidUpdatePreferences.rawValue, object: nil);
+            let defaults = UserDefaults.standard
+            defaults.set(newValue?.absoluteString, forKey: Preferences.updateServerUrlKey)
+            NotificationCenter.default.post(name: Notification.Name(rawValue: PreferencesNotifications.DidUpdatePreferences.rawValue), object: nil);
         }
     }
     
@@ -157,12 +157,12 @@ import Foundation
     
     static var softwareUpdateIgnoredVersion: String? {
         get {
-            let defaults = NSUserDefaults.standardUserDefaults()
-            return defaults.stringForKey(Preferences.updateIgnoredVersionKey)
+            let defaults = UserDefaults.standard
+            return defaults.string(forKey: Preferences.updateIgnoredVersionKey)
         }
         set {
-            let defaults = NSUserDefaults.standardUserDefaults()
-            defaults.setObject(newValue, forKey: Preferences.updateIgnoredVersionKey)
+            let defaults = UserDefaults.standard
+            defaults.set(newValue, forKey: Preferences.updateIgnoredVersionKey)
         }
     }
     
@@ -180,27 +180,27 @@ import Foundation
     // MARK: - Uart
     static var uartReceveivedDataColor: Color {
         get {
-            let defaults = NSUserDefaults.standardUserDefaults()
-            let hexColorString = defaults.stringForKey(Preferences.uartReceivedDataColorKey)
-            return Color(CSS: hexColorString)
+            let defaults = UserDefaults.standard
+            let hexColorString = defaults.string(forKey: Preferences.uartReceivedDataColorKey)
+            return Color(css: hexColorString)
         }
         set {
-            let defaults = NSUserDefaults.standardUserDefaults()
-            defaults.setObject(newValue.hexString(), forKey: Preferences.uartReceivedDataColorKey)
-            NSNotificationCenter.defaultCenter().postNotificationName(PreferencesNotifications.DidUpdatePreferences.rawValue, object: nil);
+            let defaults = UserDefaults.standard
+            defaults.set(newValue.hexString(), forKey: Preferences.uartReceivedDataColorKey)
+            NotificationCenter.default.post(name: Notification.Name(rawValue: PreferencesNotifications.DidUpdatePreferences.rawValue), object: nil);
         }
     }
     
     static var uartSentDataColor: Color {
         get {
-            let defaults = NSUserDefaults.standardUserDefaults()
-            let hexColorString = defaults.stringForKey(Preferences.uartSentDataColorKey)
-            return Color(CSS: hexColorString)
+            let defaults = UserDefaults.standard
+            let hexColorString = defaults.string(forKey: Preferences.uartSentDataColorKey)
+            return Color(css: hexColorString)
         }
         set {
-            let defaults = NSUserDefaults.standardUserDefaults()
-            defaults.setObject(newValue.hexString(), forKey: Preferences.uartSentDataColorKey)
-            NSNotificationCenter.defaultCenter().postNotificationName(PreferencesNotifications.DidUpdatePreferences.rawValue, object: nil);
+            let defaults = UserDefaults.standard
+            defaults.set(newValue.hexString(), forKey: Preferences.uartSentDataColorKey)
+            NotificationCenter.default.post(name: Notification.Name(rawValue: PreferencesNotifications.DidUpdatePreferences.rawValue), object: nil);
         }
     }
     
@@ -261,29 +261,29 @@ import Foundation
     }
     
     // MARK: - Common
-    static func getBoolPreference(key: String) -> Bool {
-        let defaults = NSUserDefaults.standardUserDefaults()
-        return defaults.boolForKey(key)
+    static func getBoolPreference(_ key: String) -> Bool {
+        let defaults = UserDefaults.standard
+        return defaults.bool(forKey: key)
     }
     
-    static func setBoolPreference(key: String, newValue: Bool) {
-        let defaults = NSUserDefaults.standardUserDefaults()
-        defaults.setBool(newValue, forKey: key)
-        NSNotificationCenter.defaultCenter().postNotificationName(PreferencesNotifications.DidUpdatePreferences.rawValue, object: nil);
+    static func setBoolPreference(_ key: String, newValue: Bool) {
+        let defaults = UserDefaults.standard
+        defaults.set(newValue, forKey: key)
+        NotificationCenter.default.post(name: Notification.Name(rawValue: PreferencesNotifications.DidUpdatePreferences.rawValue), object: nil);
     }
     
     // MARK: - Defaults
     static func registerDefaults() {
-        let path = NSBundle.mainBundle().pathForResource("DefaultPreferences", ofType: "plist")!
+        let path = Bundle.main.path(forResource: "DefaultPreferences", ofType: "plist")!
         let defaultPrefs = NSDictionary(contentsOfFile: path) as! [String : AnyObject]
         
-        NSUserDefaults.standardUserDefaults().registerDefaults(defaultPrefs)
+        UserDefaults.standard.register(defaults: defaultPrefs)
     }
     
     static func resetDefaults() {
-        let appDomain = NSBundle.mainBundle().bundleIdentifier!
-        let defaults = NSUserDefaults.standardUserDefaults()
-        defaults.removePersistentDomainForName(appDomain)
+        let appDomain = Bundle.main.bundleIdentifier!
+        let defaults = UserDefaults.standard
+        defaults.removePersistentDomain(forName: appDomain)
     }
 }
 

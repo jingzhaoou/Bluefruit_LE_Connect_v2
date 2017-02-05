@@ -9,7 +9,7 @@
 import UIKit
 
 protocol NeopixelTypeValueTableViewCellDelegate: class {
-    func onSetValue(value: UInt16)
+    func onSetValue(_ value: UInt16)
 }
 
 class NeopixelTypeValueTableViewCell: UITableViewCell {
@@ -28,29 +28,29 @@ class NeopixelTypeValueTableViewCell: UITableViewCell {
 //        valueTextField.delegate = self
     }
 
-    override func setSelected(selected: Bool, animated: Bool) {
+    override func setSelected(_ selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
 
         // Configure the view for the selected state
     }
 
-    @IBAction func onClickSet(sender: AnyObject) {
+    @IBAction func onClickSet(_ sender: AnyObject) {
         
         if let type = typeFromInput(valueTextField.text) {
             self.delegate?.onSetValue(type)
         }
     }
     
-    func typeFromInput(originalText: String?) -> UInt16? {
+    func typeFromInput(_ originalText: String?) -> UInt16? {
         var result: UInt16?
-        if let text = originalText, type = UInt16(text) where !text.isEmpty && Int(text)>=0 && Int(text)  < 65535 {
+        if let text = originalText, let type = UInt16(text), !text.isEmpty && Int(text)!>=0 && Int(text)!  < 65535 {
                 result = type
         }
         
         return result
     }
     
-    func isInputValid(text: String?) -> Bool {
+    func isInputValid(_ text: String?) -> Bool {
         return typeFromInput(text) != nil
     }
 }

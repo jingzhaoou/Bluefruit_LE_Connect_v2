@@ -31,30 +31,30 @@ class UartSettingsViewController: UIViewController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         
-        preferredContentSize = CGSizeMake(preferredContentSize.width, baseTableView.contentSize.height)
+        preferredContentSize = CGSize(width: preferredContentSize.width, height: baseTableView.contentSize.height)
     }
 }
 
 // MARK: - UITableViewDataSource
 extension UartSettingsViewController: UITableViewDataSource {
     
-    private enum SettingsSection: Int {
-        case DisplayMode = 0
-        case DataMode = 1
-        case Echo = 2
-        case Eol = 3
+    fileprivate enum SettingsSection: Int {
+        case displayMode = 0
+        case dataMode = 1
+        case echo = 2
+        case eol = 3
     }
     
-    private enum ActionsSetion: Int {
-        case Clear = 0
-        case Export = 1
+    fileprivate enum ActionsSetion: Int {
+        case clear = 0
+        case export = 1
     }
     
-    func numberOfSectionsInTableView(tableView: UITableView) -> Int {
+    func numberOfSections(in tableView: UITableView) -> Int {
         return 2
     }
     
-    func tableView(tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         var title: String?
         switch section {
         case 0:
@@ -68,7 +68,7 @@ extension UartSettingsViewController: UITableViewDataSource {
     }
     
     
-    func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         if section == 0 {
             return 4
         }
@@ -77,39 +77,39 @@ extension UartSettingsViewController: UITableViewDataSource {
         }
     }
     
-    func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
         let row = indexPath.row
         var reuseIdentifier: String!
         
         if indexPath.section == 0 {
             switch SettingsSection(rawValue: row)! {
-            case .DisplayMode:
+            case .displayMode:
                 reuseIdentifier = "UartSettingSegmentedCell"
-            case .DataMode:
+            case .dataMode:
                 reuseIdentifier = "UartSettingSegmentedCell"
-            case .Echo:
+            case .echo:
                 reuseIdentifier = "UartSettingSwitchCell"
-            case .Eol:
+            case .eol:
                 reuseIdentifier = "UartSettingSwitchCell"
             }
         }
         else {
             switch ActionsSetion(rawValue: row)! {
-            case .Clear:
+            case .clear:
                 reuseIdentifier = "UartTextCell"
-            case .Export:
+            case .export:
                 reuseIdentifier = "UartTextCell"
             }
         }
         
-        let cell = tableView.dequeueReusableCellWithIdentifier(reuseIdentifier, forIndexPath:indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: reuseIdentifier, for:indexPath)
 
         cell.backgroundColor = UIColor(hex: 0xe2e1e0)
         return cell
     }
     
-    func tableView(tableView: UITableView, willDisplayCell cell: UITableViewCell, forRowAtIndexPath indexPath: NSIndexPath) {
+    func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
         
         let localizationManager = LocalizationManager.sharedInstance
         let uartCell = cell as! UartSettingTableViewCell
@@ -119,31 +119,31 @@ extension UartSettingsViewController: UITableViewDataSource {
         
         if indexPath.section == 0 {
             switch SettingsSection(rawValue: row)! {
-            case .DisplayMode:
+            case .displayMode:
                 titleKey = "uart_settings_displayMode_title"
-                uartCell.segmentedControl.setTitle(localizationManager.localizedString("uart_settings_displayMode_timestamp"), forSegmentAtIndex: 0)
-                uartCell.segmentedControl.setTitle(localizationManager.localizedString("uart_settings_displayMode_text"), forSegmentAtIndex: 1)
+                uartCell.segmentedControl.setTitle(localizationManager.localizedString("uart_settings_displayMode_timestamp"), forSegmentAt: 0)
+                uartCell.segmentedControl.setTitle(localizationManager.localizedString("uart_settings_displayMode_text"), forSegmentAt: 1)
                 uartCell.segmentedControl.selectedSegmentIndex = Preferences.uartIsDisplayModeTimestamp ? 0:1
                 uartCell.onSegmentedControlIndexChanged = { selectedIndex in
                     Preferences.uartIsDisplayModeTimestamp = selectedIndex == 0
                 }
-            case .DataMode:
+            case .dataMode:
                 titleKey = "uart_settings_dataMode_title"
-                uartCell.segmentedControl.setTitle(localizationManager.localizedString("uart_settings_dataMode_ascii"), forSegmentAtIndex: 0)
-                uartCell.segmentedControl.setTitle(localizationManager.localizedString("uart_settings_dataMode_hex"), forSegmentAtIndex: 1)
+                uartCell.segmentedControl.setTitle(localizationManager.localizedString("uart_settings_dataMode_ascii"), forSegmentAt: 0)
+                uartCell.segmentedControl.setTitle(localizationManager.localizedString("uart_settings_dataMode_hex"), forSegmentAt: 1)
                 uartCell.segmentedControl.selectedSegmentIndex = Preferences.uartIsInHexMode ? 1:0
                 uartCell.onSegmentedControlIndexChanged = { selectedIndex in
                     Preferences.uartIsInHexMode = selectedIndex == 1
                 }
-            case .Echo:
+            case .echo:
                 titleKey = "uart_settings_echo_title"
-                uartCell.switchControl.on = Preferences.uartIsEchoEnabled
+                uartCell.switchControl.isOn = Preferences.uartIsEchoEnabled
                 uartCell.onSwitchEnabled = { enabled in
                     Preferences.uartIsEchoEnabled = enabled
                 }
-            case .Eol:
+            case .eol:
                 titleKey = "uart_settings_eol_title"
-                uartCell.switchControl.on = Preferences.uartIsAutomaticEolEnabled
+                uartCell.switchControl.isOn = Preferences.uartIsAutomaticEolEnabled
                 uartCell.onSwitchEnabled = { enabled in
                     Preferences.uartIsAutomaticEolEnabled = enabled
                 }
@@ -154,11 +154,11 @@ extension UartSettingsViewController: UITableViewDataSource {
         else {
             var iconIdentifier: String?
             switch ActionsSetion(rawValue: row)! {
-            case .Clear:
+            case .clear:
                 titleKey = "uart_settings_clear_title"
                 iconIdentifier = "clear_icon"
                 
-            case .Export:
+            case .export:
                 titleKey = "uart_settings_export_title"
                 iconIdentifier = "action_icon"
             }
@@ -171,21 +171,21 @@ extension UartSettingsViewController: UITableViewDataSource {
 
 // MARK: - UITableViewDelegate
 extension UartSettingsViewController: UITableViewDelegate {
-    func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
         if indexPath.section == 1 {
             switch ActionsSetion(rawValue: indexPath.row)! {
-            case .Clear:
-                presentingViewController?.dismissViewControllerAnimated(true, completion: { [unowned self] () -> Void in
+            case .clear:
+                presentingViewController?.dismiss(animated: true, completion: { [unowned self] () -> Void in
                     self.onClickClear?()
                 })
-            case .Export:
-                presentingViewController?.dismissViewControllerAnimated(true, completion: { [unowned self] () -> Void in
+            case .export:
+                presentingViewController?.dismiss(animated: true, completion: { [unowned self] () -> Void in
                     self.onClickExport?()
                 })
             }
         }
         
-        tableView.deselectRowAtIndexPath(indexPath, animated: true)
+        tableView.deselectRow(at: indexPath, animated: true)
     }
 }

@@ -19,30 +19,30 @@ class MqttSettings
     static let defaultServerPort = 1883;
 
     // Constants
-    private static let preferences_serveraddress = "serveraddress";
-    private static let preferences_serverport = "serverport";
-    private static let preferences_publishtopic = "publishtopic";
-    private static let preferences_publishqos = "publishqos";
-    private static let preferences_publishenabled = "publishenabled";
-    private static let preferences_subscribetopic = "subscribetopic";
-    private static let preferences_subscribeqos = "subscribeqos";
-    private static let preferences_subscribebehaviour = "subscribebehaviour";
-    private static let preferences_subscribeenabled = "subscribeenabled";
-    private static let preferences_connected = "connected";
-    private static let preferences_username = "username";
-    private static let preferences_password = "password";
-    private static let preferences_cleansession = "cleansession";
-    private static let preferences_sslconnection = "sslconnection";
+    fileprivate static let preferences_serveraddress = "serveraddress";
+    fileprivate static let preferences_serverport = "serverport";
+    fileprivate static let preferences_publishtopic = "publishtopic";
+    fileprivate static let preferences_publishqos = "publishqos";
+    fileprivate static let preferences_publishenabled = "publishenabled";
+    fileprivate static let preferences_subscribetopic = "subscribetopic";
+    fileprivate static let preferences_subscribeqos = "subscribeqos";
+    fileprivate static let preferences_subscribebehaviour = "subscribebehaviour";
+    fileprivate static let preferences_subscribeenabled = "subscribeenabled";
+    fileprivate static let preferences_connected = "connected";
+    fileprivate static let preferences_username = "username";
+    fileprivate static let preferences_password = "password";
+    fileprivate static let preferences_cleansession = "cleansession";
+    fileprivate static let preferences_sslconnection = "sslconnection";
 
     // Data
     enum SubscribeBehaviour : Int {
-        case LocalOnly = 0
-        case Transmit = 1
+        case localOnly = 0
+        case transmit = 1
     }
     
     enum PublishFeed : Int {
-        case RX = 0
-        case TX = 1
+        case rx = 0
+        case tx = 1
     }
     
     var serverAddress : String? {
@@ -95,18 +95,18 @@ class MqttSettings
         }
     }
     
-    func getPublishQos(index:Int) -> MqttManager.MqttQos {
-        let value = loadIntPref(MqttSettings.preferences_publishqos+"\(index)", defaultValue: MqttManager.MqttQos.AtMostOnce.rawValue)
+    func getPublishQos(_ index:Int) -> MqttManager.MqttQos {
+        let value = loadIntPref(MqttSettings.preferences_publishqos+"\(index)", defaultValue: MqttManager.MqttQos.atMostOnce.rawValue)
         return MqttManager.MqttQos(rawValue: value)!
     }
     
-    func setPublishQos(index:Int, qos:MqttManager.MqttQos) {
+    func setPublishQos(_ index:Int, qos:MqttManager.MqttQos) {
         saveIntPref(MqttSettings.preferences_publishqos+"\(index)", value: qos.rawValue)
     }
     
     var subscribeQos : MqttManager.MqttQos {
         get {
-            let value = loadIntPref(MqttSettings.preferences_subscribeqos, defaultValue: MqttManager.MqttQos.AtMostOnce.rawValue)
+            let value = loadIntPref(MqttSettings.preferences_subscribeqos, defaultValue: MqttManager.MqttQos.atMostOnce.rawValue)
             return MqttManager.MqttQos(rawValue: value)!
         }
         
@@ -115,17 +115,17 @@ class MqttSettings
         }
     }
     
-    func getPublishTopic(index:Int) -> String? {
+    func getPublishTopic(_ index:Int) -> String? {
         return loadStringPref(MqttSettings.preferences_publishtopic+"\(index)", defaultValue: nil)
     }
     
-    func setPublishTopic(index:Int, topic:String?) {
+    func setPublishTopic(_ index:Int, topic:String?) {
         saveStringPref(MqttSettings.preferences_publishtopic+"\(index)", value: topic)
     }
 
     var subscribeBehaviour : SubscribeBehaviour {
         get {
-            let value = loadIntPref(MqttSettings.preferences_subscribebehaviour, defaultValue: SubscribeBehaviour.LocalOnly.rawValue)
+            let value = loadIntPref(MqttSettings.preferences_subscribebehaviour, defaultValue: SubscribeBehaviour.localOnly.rawValue)
             return SubscribeBehaviour(rawValue: value)!
         }
         
@@ -176,48 +176,48 @@ class MqttSettings
     }
     
     // Common load and save
-    func saveStringPref(key : String, value : String?) {
-        let defaults = NSUserDefaults.standardUserDefaults()
-        defaults.setObject(value, forKey: key)
+    func saveStringPref(_ key : String, value : String?) {
+        let defaults = UserDefaults.standard
+        defaults.set(value, forKey: key)
         defaults.synchronize()
         
     }
     
-    func loadStringPref(key : String, defaultValue: String?) -> String? {
-        let defaults = NSUserDefaults.standardUserDefaults()
-        if let value = defaults.stringForKey(key) {
+    func loadStringPref(_ key : String, defaultValue: String?) -> String? {
+        let defaults = UserDefaults.standard
+        if let value = defaults.string(forKey: key) {
             return value
         }else {
             return defaultValue
         }
     }
     
-    func saveIntPref(key : String, value : Int) {
-        let defaults = NSUserDefaults.standardUserDefaults()
-        defaults.setInteger(value, forKey: key)
+    func saveIntPref(_ key : String, value : Int) {
+        let defaults = UserDefaults.standard
+        defaults.set(value, forKey: key)
         defaults.synchronize()
         
     }
     
-    func loadIntPref(key : String, defaultValue: Int) -> Int {
-        let defaults = NSUserDefaults.standardUserDefaults()
-        if let value = defaults.objectForKey(key) as! Int? {
+    func loadIntPref(_ key : String, defaultValue: Int) -> Int {
+        let defaults = UserDefaults.standard
+        if let value = defaults.object(forKey: key) as! Int? {
             return value
         }else {
             return defaultValue
         }
     }
 
-    func saveBoolPref(key : String, value : Bool) {
-        let defaults = NSUserDefaults.standardUserDefaults()
-        defaults.setBool(value, forKey: key)
+    func saveBoolPref(_ key : String, value : Bool) {
+        let defaults = UserDefaults.standard
+        defaults.set(value, forKey: key)
         defaults.synchronize()
         
     }
     
-    func loadBoolPref(key : String, defaultValue: Bool) -> Bool {
-        let defaults = NSUserDefaults.standardUserDefaults()
-        if let value = defaults.objectForKey(key) as! Bool? {
+    func loadBoolPref(_ key : String, defaultValue: Bool) -> Bool {
+        let defaults = UserDefaults.standard
+        if let value = defaults.object(forKey: key) as! Bool? {
             return value
         }else {
             return defaultValue

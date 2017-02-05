@@ -15,7 +15,7 @@ class HelpExportViewController: HelpViewController {
     
     // Data
     var fileTitle: String?
-    var fileURL: NSURL?
+    var fileURL: URL?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -40,13 +40,13 @@ class HelpExportViewController: HelpViewController {
     */
 
     
-    @IBAction func onCickExport(sender: AnyObject) {
-        if let fileTitle = fileTitle, fileURL = fileURL {
+    @IBAction func onCickExport(_ sender: AnyObject) {
+        if let fileTitle = fileTitle, let fileURL = fileURL {
             
             let activityViewController = UIActivityViewController(activityItems: [fileTitle, fileURL], applicationActivities: nil)
             activityViewController.popoverPresentationController?.sourceView = exportButton
             
-            navigationController?.presentViewController(activityViewController, animated: true, completion: nil)
+            navigationController?.present(activityViewController, animated: true, completion: nil)
         }
         else {
             DLog("HelpExportViewController: wrong parameters")

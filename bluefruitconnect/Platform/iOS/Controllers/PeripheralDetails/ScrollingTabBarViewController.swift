@@ -35,14 +35,14 @@ class ScrollingTabBarViewController: UIViewController {
         }
         
         didSet {
-            if let viewControllers = viewControllers where selectedIndex != oldValue && selectedIndex >= 0 {
+            if let viewControllers = viewControllers, selectedIndex != oldValue && selectedIndex >= 0 {
                 changeSelectedViewController(viewControllers[selectedIndex])
             }
         }
     }
 
     var selectedViewController: UIViewController? {
-        if let viewControllers = viewControllers where selectedIndex >= 0 && selectedIndex < viewControllers.count {
+        if let viewControllers = viewControllers, selectedIndex >= 0 && selectedIndex < viewControllers.count {
             return viewControllers[selectedIndex]
         }
         else {
@@ -61,29 +61,29 @@ class ScrollingTabBarViewController: UIViewController {
         // Dispose of any resources that can be recreated.
     }
     
-    func setViewControllers(viewControllers: [UIViewController]?, animated: Bool) {
+    func setViewControllers(_ viewControllers: [UIViewController]?, animated: Bool) {
         self.viewControllers = viewControllers
     }
     
-    func hideTabBar(hide: Bool) {
+    func hideTabBar(_ hide: Bool) {
        // tabBarContentView.transform = hide ? CGAffineTransformMakeTranslation(0, tabBarContentView.bounds.size.height):CGAffineTransformIdentity
-        tabBarCollectionView.hidden = hide
+        tabBarCollectionView.isHidden = hide
     }
     
-    private func removeSelectedViewController() {
+    fileprivate func removeSelectedViewController() {
         guard let currentViewController = selectedViewController else {
             return
         }
         
         // Remove previous
-        currentViewController.willMoveToParentViewController(nil)
+        currentViewController.willMove(toParentViewController: nil)
         currentViewController.beginAppearanceTransition(false, animated: false)
         currentViewController.view.removeFromSuperview()
         currentViewController.endAppearanceTransition()
         currentViewController.removeFromParentViewController()
     }
     
-    private func changeSelectedViewController(viewController: UIViewController?) {
+    fileprivate func changeSelectedViewController(_ viewController: UIViewController?) {
         // DLog("changeSelectedViewController \(viewController)")
         guard let viewController = viewController else {
             return
@@ -92,38 +92,38 @@ class ScrollingTabBarViewController: UIViewController {
         // Add new
         let containerView = contentView
         let subview = viewController.view
-        subview.translatesAutoresizingMaskIntoConstraints = false
+        subview?.translatesAutoresizingMaskIntoConstraints = false
         self.addChildViewController(viewController)
         
         viewController.beginAppearanceTransition(true, animated: true)
-        containerView.addSubview(subview)
+        containerView?.addSubview(subview!)
         viewController.endAppearanceTransition()
         
         let dictionaryOfVariableBindings = ["subview" :subview]
-        containerView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("H:|[subview]|", options: NSLayoutFormatOptions(rawValue: 0), metrics: nil, views: dictionaryOfVariableBindings))
-        containerView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[subview]|", options: NSLayoutFormatOptions(rawValue: 0), metrics: nil, views: dictionaryOfVariableBindings))
+        containerView?.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|[subview]|", options: NSLayoutFormatOptions(rawValue: 0), metrics: nil, views: dictionaryOfVariableBindings))
+        containerView?.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:|[subview]|", options: NSLayoutFormatOptions(rawValue: 0), metrics: nil, views: dictionaryOfVariableBindings))
         
-        viewController.didMoveToParentViewController(self)
+        viewController.didMove(toParentViewController: self)
     }
 }
 
 // MARK: - UICollectionViewDataSource
 extension ScrollingTabBarViewController: UICollectionViewDataSource {
     
-    func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return viewControllers == nil ? 0: viewControllers!.count
     }
     
-    func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         
         let reuseIdentifier = "ItemCell"
-        let itemCell = collectionView.dequeueReusableCellWithReuseIdentifier(reuseIdentifier, forIndexPath: indexPath) as! PeripheralDetailsCollectionViewCell
+        let itemCell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as! PeripheralDetailsCollectionViewCell
         
         if let tabBarItem = viewControllers?[indexPath.row].tabBarItem {
             itemCell.titleLabel.text = tabBarItem.title
-            itemCell.iconImageView.image = tabBarItem.image?.imageWithRenderingMode(.AlwaysTemplate)
+            itemCell.iconImageView.image = tabBarItem.image?.withRenderingMode(.alwaysTemplate)
         }
-        itemCell.selected = indexPath.row == selectedIndex
+        itemCell.isSelected = indexPath.row == selectedIndex
         
         return itemCell
     }
@@ -132,7 +132,7 @@ extension ScrollingTabBarViewController: UICollectionViewDataSource {
 
 // MARK: - UICollectionViewDelegate
 extension ScrollingTabBarViewController: UICollectionViewDelegate {
-    func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         
         selectedIndex = indexPath.row
         collectionView.reloadData()
@@ -144,20 +144,20 @@ extension ScrollingTabBarViewController: UICollectionViewDelegate {
 // MARK: - UICollectionViewDelegateFlowLayout
 extension ScrollingTabBarViewController : UICollectionViewDelegateFlowLayout {
     
-    func collectionView(collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAtIndexPath indexPath: NSIndexPath) -> CGSize {
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         
         let kItemDefaultWidth: CGFloat = 60
         let kDefaultMargin: CGFloat = 20
         
         var itemWidth = kItemDefaultWidth
         let maxWidth = collectionView.bounds.size.width - kDefaultMargin*2
-        let numItems = collectionView.numberOfItemsInSection(0)
+        let numItems = collectionView.numberOfItems(inSection: 0)
         let itemsWidth = kItemDefaultWidth * CGFloat(numItems)
         if itemsWidth < maxWidth {
             itemWidth = maxWidth / CGFloat(numItems)
         }
         
-        return CGSizeMake(itemWidth, 49)
+        return CGSize(width: itemWidth, height: 49)
     }
     
 }

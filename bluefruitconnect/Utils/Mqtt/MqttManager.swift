@@ -12,41 +12,41 @@ import CocoaMQTT
 protocol MqttManagerDelegate : class {
     func onMqttConnected()
     func onMqttDisconnected()
-    func onMqttMessageReceived(message : String, topic: String)
-    func onMqttError(message : String)
+    func onMqttMessageReceived(_ message : String, topic: String)
+    func onMqttError(_ message : String)
 }
 
 class MqttManager
 {
     enum ConnectionStatus {
-        case Connecting
-        case Connected
-        case Disconnecting
-        case Disconnected
-        case Error
-        case None
+        case connecting
+        case connected
+        case disconnecting
+        case disconnected
+        case error
+        case none
     }
     
     enum MqttQos : Int  {
-        case AtMostOnce = 0
-        case AtLeastOnce = 1
-        case ExactlyOnce = 2
+        case atMostOnce = 0
+        case atLeastOnce = 1
+        case exactlyOnce = 2
     }
     
     // Singleton
     static let sharedInstance = MqttManager()
     
     // Constants
-    private static let defaultKeepAliveInterval : Int32 = 60;
+    fileprivate static let defaultKeepAliveInterval : Int32 = 60;
     
     // Data
     weak var delegate : MqttManagerDelegate?
-    var status = ConnectionStatus.None
+    var status = ConnectionStatus.none
 
-    private var mqttClient : CocoaMQTT?
+    fileprivate var mqttClient : CocoaMQTT?
     
     //
-    private init() {
+    fileprivate init() {
     }
 
     func connectFromSavedSettings() {
@@ -61,7 +61,7 @@ class MqttManager
         }
     }
 
-    func connect(host: String, port: Int, username: String?, password: String?, cleanSession: Bool) {
+    func connect(_ host: String, port: Int, username: String?, password: String?, cleanSession: Bool) {
         
         guard !host.isEmpty else {
             delegate?.onMqttDisconnected()
@@ -70,12 +70,12 @@ class MqttManager
 
         // Init connection process
         MqttSettings.sharedInstance.isConnected = true
-        status = ConnectionStatus.Connecting
+        status = ConnectionStatus.connecting
         
         // Configure MQTT connection
-        let clientId = "Bluefruit_" + String(NSProcessInfo().processIdentifier)
+        let clientId = "Bluefruit_" + String(ProcessInfo().processIdentifier)
         
-        mqttClient = CocoaMQTT(clientId: clientId, host: host, port: UInt16(port))
+        mqttClient = CocoaMQTT(clientID: clientId, host: host, port: UInt16(port))
         if let mqttClient = mqttClient {
 
             mqttClient.username = username
@@ -83,26 +83,26 @@ class MqttManager
 
             //mqtt.willMessage = CocoaMQTTWill(topic: "/will", message: "dieout")
             mqttClient.keepAlive = UInt16(MqttManager.defaultKeepAliveInterval)
-            mqttClient.cleanSess = cleanSession
+            mqttClient.cleanSession = cleanSession
             mqttClient.delegate = self
             mqttClient.connect()
         }
         else {
             delegate?.onMqttError("Mqtt initialization error")
-            status = .Error
+            status = .error
         }
     }
 
-    func subscribe(topic: String, qos: MqttQos) {
+    func subscribe(_ topic: String, qos: MqttQos) {
         let qos = CocoaMQTTQOS(rawValue :UInt8(qos.rawValue))!
         mqttClient?.subscribe(topic, qos: qos)
     }
     
-    func unsubscribe(topic: String) {
+    func unsubscribe(_ topic: String) {
         mqttClient?.unsubscribe(topic)
     }
     
-    func publish(message: String, topic: String, qos: MqttQos) {
+    func publish(_ message: String, topic: String, qos: MqttQos) {
         let qos = CocoaMQTTQOS(rawValue :UInt8(qos.rawValue))!
         mqttClient?.publish(topic, withString: message, qos: qos)
     }
@@ -111,31 +111,35 @@ class MqttManager
         MqttSettings.sharedInstance.isConnected = false
         
         if let client = mqttClient {
-            status = .Disconnecting
+            status = .disconnecting
             client.disconnect()
         }
         else {
-            status = .Disconnected
+            status = .disconnected
         }
     }
 }
 
 extension MqttManager: CocoaMQTTDelegate {
+    public func mqttDidDisconnect(_ mqtt: CocoaMQTT, withError err: Error?) {
+        // TODO
+    }
+
     
-    func mqtt(mqtt: CocoaMQTT, didConnect host: String, port: Int) {
+    func mqtt(_ mqtt: CocoaMQTT, didConnect host: String, port: Int) {
         DLog("didConnect: \(host):\(port)")
-        self.status = ConnectionStatus.Connected
+        self.status = ConnectionStatus.connected
     }
     
-    func mqtt(mqtt: CocoaMQTT, didConnectAck ack: CocoaMQTTConnAck) {
+    func mqtt(_ mqtt: CocoaMQTT, didConnectAck ack: CocoaMQTTConnAck) {
         DLog("didConnectAck: \(ack)")
         
         let mqttSettings = MqttSettings.sharedInstance
         
-        if (ack == .ACCEPT) {
+        if (ack == .accept) {
             delegate?.onMqttConnected()
             
-            if let topic = mqttSettings.subscribeTopic where mqttSettings.isSubscribeEnabled {
+            if let topic = mqttSettings.subscribeTopic, mqttSettings.isSubscribeEnabled {
                 self.subscribe(topic, qos: mqttSettings.subscribeQos)
             }
         }
@@ -143,18 +147,20 @@ extension MqttManager: CocoaMQTTDelegate {
             // Connection error
             var errorDescription = "Unknown Error"
             switch(ack) {
-            case .ACCEPT:
+            case .accept:
                 errorDescription = "No Error"
-            case .PROTO_VER:
-                errorDescription = "Proto ver"
-            case .INVALID_ID:
+            case .unacceptableProtocolVersion:
+                errorDescription = "Proto Ver"
+            case .identifierRejected:
                 errorDescription = "Invalid Id"
-            case .SERVER:
+            case .serverUnavailable:
                 errorDescription = "Invalid Server"
-            case .CREDENTIALS:
+            case .badUsernameOrPassword:
                 errorDescription = "Invalid Credentials"
-            case .AUTH:
+            case .notAuthorized:
                 errorDescription = "Authorization Error"
+            default:
+                errorDescription = "Undefined Error"
             }
             
             delegate?.onMqttError(errorDescription);
@@ -163,30 +169,30 @@ extension MqttManager: CocoaMQTTDelegate {
             mqttSettings.isConnected = false        // Disable automatic connect on start
         }
 
-        self.status = ack == .ACCEPT ? ConnectionStatus.Connected : ConnectionStatus.Error      // Set AFTER sending onMqttError (so the delegate can detect that was an error while stablishing connection)
+        self.status = ack == .accept ? ConnectionStatus.connected : ConnectionStatus.error      // Set AFTER sending onMqttError (so the delegate can detect that was an error while stablishing connection)
 
     }
     
-    func mqttDidDisconnect(mqtt: CocoaMQTT, withError err: NSError?) {
-        DLog("mqttDidDisconnect: \(err != nil ? err! : "")")
+    func mqttDidDisconnect(_ mqtt: CocoaMQTT, withError err: NSError?) {
+        DLog("mqttDidDisconnect: \(err != nil ? err!.localizedDescription : "")")
 
-        if let error = err where status == .Connecting {
+        if let error = err, status == .connecting {
             delegate?.onMqttError(error.localizedDescription)
         }
        
-        status = err == nil ? .Disconnected : .Error
+        status = err == nil ? .disconnected : .error
         delegate?.onMqttDisconnected()
     }
 
-    func mqtt(mqtt: CocoaMQTT, didPublishMessage message: CocoaMQTTMessage, id: UInt16) {
+    func mqtt(_ mqtt: CocoaMQTT, didPublishMessage message: CocoaMQTTMessage, id: UInt16) {
         DLog("didPublishMessage")
     }
     
-    func mqtt(mqtt: CocoaMQTT, didPublishAck id: UInt16) {
+    func mqtt(_ mqtt: CocoaMQTT, didPublishAck id: UInt16) {
         DLog("didPublishAck")
     }
     
-    func mqtt(mqtt: CocoaMQTT, didReceiveMessage message: CocoaMQTTMessage, id: UInt16) {
+    func mqtt(_ mqtt: CocoaMQTT, didReceiveMessage message: CocoaMQTTMessage, id: UInt16) {
         
         if let string = message.string {
             DLog("didReceiveMessage: \(string) from topic: \(message.topic)")
@@ -197,20 +203,20 @@ extension MqttManager: CocoaMQTTDelegate {
         }
     }
     
-    func mqtt(mqtt: CocoaMQTT, didSubscribeTopic topic: String) {
+    func mqtt(_ mqtt: CocoaMQTT, didSubscribeTopic topic: String) {
         DLog("didSubscribeTopic")
     }
     
-    func mqtt(mqtt: CocoaMQTT, didUnsubscribeTopic topic: String) {
+    func mqtt(_ mqtt: CocoaMQTT, didUnsubscribeTopic topic: String) {
         DLog("didUnsubscribeTopic")
     }
     
-    func mqttDidPing(mqtt: CocoaMQTT) {
+    func mqttDidPing(_ mqtt: CocoaMQTT) {
         //DLog("mqttDidPing")
         
     }
     
-    func mqttDidReceivePong(mqtt: CocoaMQTT) {
+    func mqttDidReceivePong(_ mqtt: CocoaMQTT) {
        // DLog("mqttDidReceivePong")
         
     }

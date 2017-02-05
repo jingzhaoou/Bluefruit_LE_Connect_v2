@@ -17,18 +17,18 @@ class StatusViewController: NSViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(didUpdateStatus(_:)), name: StatusManager.StatusNotifications.DidUpdateStatus.rawValue, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(didUpdateStatus(_:)), name: NSNotification.Name(rawValue: StatusManager.StatusNotifications.DidUpdateStatus.rawValue), object: nil)
     }
     
     deinit {
-        NSNotificationCenter.defaultCenter().removeObserver(self, name: StatusManager.StatusNotifications.DidUpdateStatus.rawValue, object: nil)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: StatusManager.StatusNotifications.DidUpdateStatus.rawValue), object: nil)
     }
     
-    func didUpdateStatus(notification: NSNotification) {
+    func didUpdateStatus(_ notification: Notification) {
         
         let message = StatusManager.sharedInstance.statusDescription()
         
-        dispatch_async(dispatch_get_main_queue(),{ [unowned self] in
+        DispatchQueue.main.async(execute: { [unowned self] in
             self.setText(message)
             //DLog("new status: \(message)")
             
@@ -37,9 +37,9 @@ class StatusViewController: NSViewController {
                     self.isAlertBeingPresented = true
                     let alert = NSAlert()
                     alert.messageText = errorMessage
-                    alert.addButtonWithTitle("Ok")
-                    alert.alertStyle = .Warning
-                    alert.beginSheetModalForWindow(self.view.window!, completionHandler: { [unowned self] (modalResponse) -> Void in
+                    alert.addButton(withTitle: "Ok")
+                    alert.alertStyle = .warning
+                    alert.beginSheetModal(for: self.view.window!, completionHandler: { [unowned self] (modalResponse) -> Void in
                         self.isAlertBeingPresented = false
                         })
                 }
@@ -47,7 +47,7 @@ class StatusViewController: NSViewController {
             })
     }
     
-    func setText(text: String) {
+    func setText(_ text: String) {
         statusTextField.stringValue = text
     }
 }

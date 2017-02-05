@@ -11,18 +11,18 @@ import UIKit
 class ControllerModuleViewController: ModuleViewController {
 
     // Constants
-    static private let kPollInterval = 0.25
+    static fileprivate let kPollInterval = 0.25
     
-    static private let kSensorTitleKeys : [String] = ["controller_sensor_quaternion", "controller_sensor_accelerometer", "controller_sensor_gyro", "controller_sensor_magnetometer", "controller_sensor_location"]
-    static private let kModuleTitleKeys : [String] = ["controller_module_pad", "controller_module_colorpicker"]
+    static fileprivate let kSensorTitleKeys : [String] = ["controller_sensor_quaternion", "controller_sensor_accelerometer", "controller_sensor_gyro", "controller_sensor_magnetometer", "controller_sensor_location"]
+    static fileprivate let kModuleTitleKeys : [String] = ["controller_module_pad", "controller_module_colorpicker"]
     
     // UI
     @IBOutlet weak var baseTableView: UITableView!
     @IBOutlet weak var uartWaitingLabel: UILabel!
 
     // Data
-    private let controllerData = ControllerModuleManager()
-    private var contentItems = [Int]()
+    fileprivate let controllerData = ControllerModuleManager()
+    fileprivate var contentItems = [Int]()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -38,10 +38,10 @@ class ControllerModuleViewController: ModuleViewController {
         updateContentItemsFromSensorsEnabled()
     }
 
-    override func viewWillAppear(animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        if isMovingToParentViewController() {       // To keep streaming data when pushing a child view
+        if isMovingToParentViewController {       // To keep streaming data when pushing a child view
             controllerData.start(ControllerModuleViewController.kPollInterval) { [unowned self] in
                 self.baseTableView.reloadData()
             }
@@ -50,24 +50,24 @@ class ControllerModuleViewController: ModuleViewController {
             WatchSessionManager.sharedInstance.updateApplicationContext(.Controller)
             
             DLog("register DidReceiveWatchCommand observer")
-            let notificationCenter =  NSNotificationCenter.defaultCenter()
-            notificationCenter.addObserver(self, selector: #selector(watchCommand(_:)), name: WatchSessionManager.Notifications.DidReceiveWatchCommand.rawValue, object: nil)
+            let notificationCenter =  NotificationCenter.default
+            notificationCenter.addObserver(self, selector: #selector(watchCommand(_:)), name: NSNotification.Name(rawValue: WatchSessionManager.Notifications.DidReceiveWatchCommand.rawValue), object: nil)
         }
     }
 
-    override func viewWillDisappear(animated: Bool) {
+    override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         
-        if isMovingFromParentViewController() {     // To keep streaming data when pushing a child view
+        if isMovingFromParentViewController {     // To keep streaming data when pushing a child view
             controllerData.stop()
             
             // Watch
             WatchSessionManager.sharedInstance.updateApplicationContext(.Connected)
             
             DLog("remove DidReceiveWatchCommand observer")
-            let notificationCenter =  NSNotificationCenter.defaultCenter()
+            let notificationCenter =  NotificationCenter.default
             notificationCenter.removeObserver(self, name:
-            WatchSessionManager.Notifications.DidReceiveWatchCommand.rawValue, object: nil)
+            NSNotification.Name(rawValue: WatchSessionManager.Notifications.DidReceiveWatchCommand.rawValue), object: nil)
         }
     }
     
@@ -80,15 +80,15 @@ class ControllerModuleViewController: ModuleViewController {
         // Dispose of any resources that can be recreated.
     }
     
-    private func updateUI() {
+    fileprivate func updateUI() {
         // Setup UI
         let isUartReady = UartManager.sharedInstance.isReady()
-        uartWaitingLabel.hidden = isUartReady
-        baseTableView.hidden = !isUartReady
+        uartWaitingLabel.isHidden = isUartReady
+        baseTableView.isHidden = !isUartReady
     }
     
-    private let kDetailItemOffset = 100
-    private func updateContentItemsFromSensorsEnabled() {
+    fileprivate let kDetailItemOffset = 100
+    fileprivate func updateContentItemsFromSensorsEnabled() {
         var items = [Int]()
         var i = 0
         for j in 0..<ControllerModuleManager.numSensors {
@@ -104,12 +104,12 @@ class ControllerModuleViewController: ModuleViewController {
     }
     
     // MARK: Notifications
-    func watchCommand(notification: NSNotification) {
+    func watchCommand(_ notification: Notification) {
         if let message = notification.userInfo, let command = message["command"] as? String {
             DLog("watchCommand notification: \(command)")
             switch command {
             case "controlPad":
-                if let tag = message["tag"]?.integerValue {
+                if let tag = (message["tag"] as? Int) {
                     sendTouchEvent(tag, isPressed: true)
                     sendTouchEvent(tag, isPressed: false)
                 }
@@ -128,20 +128,20 @@ class ControllerModuleViewController: ModuleViewController {
     }
 
     // MARK: - Actions
-    @IBAction func onClickHelp(sender: UIBarButtonItem) {
+    @IBAction func onClickHelp(_ sender: UIBarButtonItem) {
         let localizationManager = LocalizationManager.sharedInstance
-        let helpViewController = storyboard!.instantiateViewControllerWithIdentifier("HelpViewController") as! HelpViewController
+        let helpViewController = storyboard!.instantiateViewController(withIdentifier: "HelpViewController") as! HelpViewController
         helpViewController.setHelp(localizationManager.localizedString("controller_help_text"), title: localizationManager.localizedString("controller_help_title"))
         let helpNavigationController = UINavigationController(rootViewController: helpViewController)
-        helpNavigationController.modalPresentationStyle = .Popover
+        helpNavigationController.modalPresentationStyle = .popover
         helpNavigationController.popoverPresentationController?.barButtonItem = sender
         
-        presentViewController(helpNavigationController, animated: true, completion: nil)
+        present(helpNavigationController, animated: true, completion: nil)
     }
     
     
      // MARK: - Send Data
-    func sendColor(color: UIColor) {
+    func sendColor(_ color: UIColor) {
         let brightness: CGFloat = 1
         var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0
         color.getRed(&red, green: &green, blue: &blue, alpha: nil)
@@ -154,20 +154,20 @@ class ControllerModuleViewController: ModuleViewController {
         sendColorComponents(selectedColorComponents)
     }
     
-    func sendColorComponents(selectedColorComponents: [UInt8]) {
+    func sendColorComponents(_ selectedColorComponents: [UInt8]) {
         let data = NSMutableData()
-        let prefixData = ControllerColorWheelViewController.prefix.dataUsingEncoding(NSUTF8StringEncoding)!
-        data.appendData(prefixData)
+        let prefixData = ControllerColorWheelViewController.prefix.data(using: String.Encoding.utf8)!
+        data.append(prefixData)
         for var component in selectedColorComponents {
-            data.appendBytes(&component, length: sizeof(UInt8))
+            data.append(&component, length: MemoryLayout<UInt8>.size)
         }
         
-        UartManager.sharedInstance.sendDataWithCrc(data)
+        UartManager.sharedInstance.sendDataWithCrc(data as Data)
     }
     
-    func sendTouchEvent(tag: Int, isPressed: Bool) {
+    func sendTouchEvent(_ tag: Int, isPressed: Bool) {
         let message = "!B\(tag)\(isPressed ? "1" : "0")"
-        if let data = message.dataUsingEncoding(NSUTF8StringEncoding) {
+        if let data = message.data(using: String.Encoding.utf8) {
             UartManager.sharedInstance.sendDataWithCrc(data)
         }
     }
@@ -175,14 +175,14 @@ class ControllerModuleViewController: ModuleViewController {
 
 // MARK: - ControllerColorWheelViewControllerDelegate
 extension ControllerModuleViewController : ControllerColorWheelViewControllerDelegate {
-    func onSendColorComponents(colorComponents: [UInt8]) {
+    func onSendColorComponents(_ colorComponents: [UInt8]) {
         sendColorComponents(colorComponents)
     }
 }
 
 // MARK: - ControllerPadViewControllerDelegate
 extension ControllerModuleViewController : ControllerPadViewControllerDelegate {
-    func onSendControllerPadButtonStatus(tag: Int, isPressed: Bool) {
+    func onSendControllerPadButtonStatus(_ tag: Int, isPressed: Bool) {
         sendTouchEvent(tag, isPressed: isPressed)
     }
 }
@@ -191,55 +191,55 @@ extension ControllerModuleViewController : ControllerPadViewControllerDelegate {
 extension ControllerModuleViewController : UITableViewDataSource {
     
     enum ControllerSection : Int  {
-        case SensorData = 0
-        case Module = 1
+        case sensorData = 0
+        case module = 1
     }
 
-    func numberOfSectionsInTableView(tableView: UITableView) -> Int {
+    func numberOfSections(in tableView: UITableView) -> Int {
         return 2
     }
     
-    func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         switch ControllerSection(rawValue: section)! {
-        case .SensorData:
+        case .sensorData:
             //let enabledCount = sensorsEnabled.filter{ $0 }.count
             //return ControllerModuleViewController.kSensorTitleKeys.count + enabledCount
             return contentItems.count
-        case .Module:
+        case .module:
             return ControllerModuleViewController.kModuleTitleKeys.count
         }
     }
     
-    func tableView(tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         
         var localizationKey: String!
         
         switch ControllerSection(rawValue: section)! {
-        case .SensorData:
+        case .sensorData:
             localizationKey = "controller_sensor_title"
-        case .Module:
+        case .module:
             localizationKey = "controller_module_title"
         }
         
         return LocalizationManager.sharedInstance.localizedString(localizationKey)
     }
     
-    func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let localizationManager = LocalizationManager.sharedInstance
         var cell: UITableViewCell!
         switch ControllerSection(rawValue: indexPath.section)! {
             
-        case .SensorData:
+        case .sensorData:
             let item = contentItems[indexPath.row]
             let isDetailCell = item>=kDetailItemOffset
             
             if isDetailCell {
                 let sensorIndex = item - kDetailItemOffset
                 let reuseIdentifier = "ComponentsCell"
-                let componentsCell = tableView.dequeueReusableCellWithIdentifier(reuseIdentifier, forIndexPath: indexPath) as! ControllerComponentsTableViewCell
+                let componentsCell = tableView.dequeueReusableCell(withIdentifier: reuseIdentifier, for: indexPath) as! ControllerComponentsTableViewCell
              
                 let componentNameKeys : [String]
-                if sensorIndex == ControllerModuleManager.ControllerType.Location.rawValue {
+                if sensorIndex == ControllerModuleManager.ControllerType.location.rawValue {
                     componentNameKeys = ["lat", "long", "alt"]
                 }
                 else {
@@ -249,11 +249,11 @@ extension ControllerModuleViewController : UITableViewDataSource {
                     var i=0
                     for subview in componentsCell.componentsStackView.subviews {
                         let hasComponent = i<sensorData.count
-                        subview.hidden = !hasComponent
-                        if let label = subview as? UILabel where hasComponent {
+                        subview.isHidden = !hasComponent
+                        if let label = subview as? UILabel, hasComponent {
                             let attributedText = NSMutableAttributedString(string: "\(componentNameKeys[i]): \(sensorData[i])")
-                            let titleLength = componentNameKeys[i].lengthOfBytesUsingEncoding(NSUTF8StringEncoding)
-                            attributedText.addAttribute(NSFontAttributeName, value: UIFont.systemFontOfSize(12, weight: UIFontWeightMedium), range: NSMakeRange(0, titleLength))
+                            let titleLength = componentNameKeys[i].lengthOfBytes(using: String.Encoding.utf8)
+                            attributedText.addAttribute(NSFontAttributeName, value: UIFont.systemFont(ofSize: 12, weight: UIFontWeightMedium), range: NSMakeRange(0, titleLength))
                             label.attributedText = attributedText
                         }
                    
@@ -262,7 +262,7 @@ extension ControllerModuleViewController : UITableViewDataSource {
                 }
                 else {
                     for subview in componentsCell.componentsStackView.subviews {
-                        subview.hidden = true
+                        subview.isHidden = true
                     }
                 }
                 
@@ -270,21 +270,21 @@ extension ControllerModuleViewController : UITableViewDataSource {
             }
             else {
                 let reuseIdentifier = "SensorCell"
-                let sensorCell = tableView.dequeueReusableCellWithIdentifier(reuseIdentifier, forIndexPath: indexPath) as! ControllerSensorTableViewCell
+                let sensorCell = tableView.dequeueReusableCell(withIdentifier: reuseIdentifier, for: indexPath) as! ControllerSensorTableViewCell
                 sensorCell.titleLabel!.text = localizationManager.localizedString( ControllerModuleViewController.kSensorTitleKeys[item])
                 
-                sensorCell.enableSwitch.on = controllerData.isSensorEnabled(item)
+                sensorCell.enableSwitch.isOn = controllerData.isSensorEnabled(item)
                 sensorCell.onSensorEnabled = { [unowned self] (enabled) in
                     
                     if self.controllerData.isSensorEnabled[item] != enabled {       // if changed
                         let errorMessage = self.controllerData.setSensorEnabled(enabled, index:item)
 
                         if let errorMessage = errorMessage {
-                            let alertController = UIAlertController(title: localizationManager.localizedString("dialog_error"), message: errorMessage, preferredStyle: .Alert)
+                            let alertController = UIAlertController(title: localizationManager.localizedString("dialog_error"), message: errorMessage, preferredStyle: .alert)
                             
-                            let okAction = UIAlertAction(title: localizationManager.localizedString("dialog_ok"), style: .Default, handler:nil)
+                            let okAction = UIAlertAction(title: localizationManager.localizedString("dialog_ok"), style: .default, handler:nil)
                             alertController.addAction(okAction)
-                            self.presentViewController(alertController, animated: true, completion: nil)
+                            self.present(alertController, animated: true, completion: nil)
                         }
                         
                         self.updateContentItemsFromSensorsEnabled()
@@ -308,22 +308,22 @@ extension ControllerModuleViewController : UITableViewDataSource {
                 cell = sensorCell
             }
             
-        case .Module:
+        case .module:
             let reuseIdentifier = "ModuleCell"
-            cell = tableView.dequeueReusableCellWithIdentifier(reuseIdentifier)
+            cell = tableView.dequeueReusableCell(withIdentifier: reuseIdentifier)
             if cell == nil {
-                cell = UITableViewCell(style: .Default, reuseIdentifier: reuseIdentifier)
+                cell = UITableViewCell(style: .default, reuseIdentifier: reuseIdentifier)
             }
-            cell.accessoryType = .DisclosureIndicator
+            cell.accessoryType = .disclosureIndicator
             cell.textLabel!.text = localizationManager.localizedString(ControllerModuleViewController.kModuleTitleKeys[indexPath.row])
         }
         
         return cell
     }
     
-    func tableView(tableView: UITableView, heightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         switch ControllerSection(rawValue: indexPath.section)! {
-        case .SensorData:
+        case .sensorData:
             let item = contentItems[indexPath.row]
             let isDetailCell = item>=kDetailItemOffset
             return isDetailCell ? 120: 44
@@ -336,33 +336,33 @@ extension ControllerModuleViewController : UITableViewDataSource {
 // MARK:  UITableViewDelegate
 extension ControllerModuleViewController : UITableViewDelegate {
     
-    func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
         switch ControllerSection(rawValue: indexPath.section)! {
-        case .Module:
+        case .module:
             if indexPath.row == 0 {
-                 let viewController = storyboard!.instantiateViewControllerWithIdentifier("ControllerPadViewController") as! ControllerPadViewController
+                 let viewController = storyboard!.instantiateViewController(withIdentifier: "ControllerPadViewController") as! ControllerPadViewController
                 viewController.delegate = self
-                navigationController?.showViewController(viewController, sender: self)
+                navigationController?.show(viewController, sender: self)
             }
             else {
-                let viewController = storyboard!.instantiateViewControllerWithIdentifier("ControllerColorWheelViewController") as! ControllerColorWheelViewController
+                let viewController = storyboard!.instantiateViewController(withIdentifier: "ControllerColorWheelViewController") as! ControllerColorWheelViewController
                 viewController.delegate = self
-                navigationController?.showViewController(viewController, sender: self)
+                navigationController?.show(viewController, sender: self)
                 
             }
 
         default:
             break
         }
-        tableView.deselectRowAtIndexPath(indexPath, animated: true)
+        tableView.deselectRow(at: indexPath, animated: true)
     }
 }
 
 // MARK: - ControllerModuleManagerDelegate
 extension ControllerModuleViewController: ControllerModuleManagerDelegate {
     func onControllerUartIsReady() {
-        dispatch_async(dispatch_get_main_queue(), { [unowned self] in
+        DispatchQueue.main.async(execute: { [unowned self] in
             self.updateUI()
             self.baseTableView.reloadData()
             });

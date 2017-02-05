@@ -23,11 +23,11 @@ class MainWindowController: NSWindowController {
         updateScanItems()
     }
     
-    override func validateToolbarItem(theItem: NSToolbarItem) -> Bool {
-        return theItem.enabled
+    override func validateToolbarItem(_ theItem: NSToolbarItem) -> Bool {
+        return theItem.isEnabled
     }
     
-    @IBAction func onClickScan(sender: NSToolbarItem) {
+    @IBAction func onClickScan(_ sender: NSToolbarItem) {
         let tag = sender.tag
         
         DLog("onClickScan: \(tag)")
@@ -47,7 +47,7 @@ class MainWindowController: NSWindowController {
         let bleManager = BleManager.sharedInstance
         let isScanning = bleManager.isScanning
         
-        startScanItem.enabled = !isScanning
-        stopScanItem.enabled = isScanning
+        startScanItem.isEnabled = !isScanning
+        stopScanItem.isEnabled = isScanning
     }    
 }

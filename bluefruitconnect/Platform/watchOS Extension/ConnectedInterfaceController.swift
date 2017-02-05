@@ -39,7 +39,7 @@ class ConnectedInterfaceController: WKInterfaceController {
 
     // MARK: - Session
     func didReceiveApplicationContext(applicationContext: [String : AnyObject]) {
-        DLog("ConnectedInterfaceController didReceiveApplicationContext: \(applicationContext)")
+//        DLog("ConnectedInterfaceController didReceiveApplicationContext: \(applicationContext)")
         
         // Name
         var peripheralName = "{No Name}"

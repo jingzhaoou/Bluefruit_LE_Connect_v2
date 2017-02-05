@@ -9,7 +9,7 @@
 import UIKit
 
 protocol ControllerPadViewControllerDelegate: class {
-    func onSendControllerPadButtonStatus(tag: Int, isPressed: Bool)
+    func onSendControllerPadButtonStatus(_ tag: Int, isPressed: Bool)
 }
 
 class ControllerPadViewController: UIViewController {
@@ -41,22 +41,22 @@ class ControllerPadViewController: UIViewController {
         }
     }
     
-    func setupButton(button: UIButton) {
+    func setupButton(_ button: UIButton) {
         button.layer.cornerRadius = 8
         button.layer.masksToBounds = true
         button.layer.borderWidth = 1
-        button.layer.borderColor = UIColor.whiteColor().CGColor
+        button.layer.borderColor = UIColor.white.cgColor
         button.layer.masksToBounds = true
         
-        button.setTitleColor(UIColor.lightGrayColor(), forState: .Highlighted)
+        button.setTitleColor(UIColor.lightGray, for: .highlighted)
         
-        let hightlightedImage = UIImage(color: UIColor.darkGrayColor())
-        button.setBackgroundImage(hightlightedImage, forState: .Highlighted)
+        let hightlightedImage = UIImage(color: UIColor.darkGray)
+        button.setBackgroundImage(hightlightedImage, for: .highlighted)
         
-        button.addTarget(self, action: #selector(onTouchDown(_:)), forControlEvents: .TouchDown)
-        button.addTarget(self, action: #selector(onTouchUp(_:)), forControlEvents: .TouchUpInside)
-        button.addTarget(self, action: #selector(onTouchUp(_:)), forControlEvents: .TouchDragExit)
-        button.addTarget(self, action: #selector(onTouchUp(_:)), forControlEvents: .TouchCancel)
+        button.addTarget(self, action: #selector(onTouchDown(_:)), for: .touchDown)
+        button.addTarget(self, action: #selector(onTouchUp(_:)), for: .touchUpInside)
+        button.addTarget(self, action: #selector(onTouchUp(_:)), for: .touchDragExit)
+        button.addTarget(self, action: #selector(onTouchUp(_:)), for: .touchCancel)
     }
 
     override func didReceiveMemoryWarning() {
@@ -66,49 +66,49 @@ class ControllerPadViewController: UIViewController {
     
     
     
-    override func viewDidAppear(animated: Bool) {
+    override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
         // Fix: remove the UINavigationController pop gesture to avoid problems with the arrows left button
-        let delayTime = dispatch_time(DISPATCH_TIME_NOW, Int64(0.1 * Double(NSEC_PER_SEC)))
-        dispatch_after(delayTime, dispatch_get_main_queue()) { [unowned self] in
+        let delayTime = DispatchTime.now() + Double(Int64(0.1 * Double(NSEC_PER_SEC))) / Double(NSEC_PER_SEC)
+        DispatchQueue.main.asyncAfter(deadline: delayTime) { [unowned self] in
             
             self.navigationController?.interactivePopGestureRecognizer?.delaysTouchesBegan = false
             self.navigationController?.interactivePopGestureRecognizer?.delaysTouchesEnded = false
-            self.navigationController?.interactivePopGestureRecognizer?.enabled = false
+            self.navigationController?.interactivePopGestureRecognizer?.isEnabled = false
         }
     }
  
 
-    override func viewDidDisappear(animated: Bool) {
+    override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         
         
     }
     
-    private func sendTouchEvent(tag: Int, isPressed: Bool) {
+    fileprivate func sendTouchEvent(_ tag: Int, isPressed: Bool) {
         if let delegate = delegate {
             delegate.onSendControllerPadButtonStatus(tag, isPressed: isPressed)
         }
     }
     
     // MARK: - Actions
-    func onTouchDown(sender: UIButton) {
+    func onTouchDown(_ sender: UIButton) {
         sendTouchEvent(sender.tag, isPressed: true)
     }
     
-    func onTouchUp(sender: UIButton) {
+    func onTouchUp(_ sender: UIButton) {
         sendTouchEvent(sender.tag, isPressed: false)
     }
     
-    @IBAction func onClickHelp(sender: UIBarButtonItem) {
+    @IBAction func onClickHelp(_ sender: UIBarButtonItem) {
         let localizationManager = LocalizationManager.sharedInstance
-        let helpViewController = storyboard!.instantiateViewControllerWithIdentifier("HelpViewController") as! HelpViewController
+        let helpViewController = storyboard!.instantiateViewController(withIdentifier: "HelpViewController") as! HelpViewController
         helpViewController.setHelp(localizationManager.localizedString("controlpad_help_text"), title: localizationManager.localizedString("controlpad_help_title"))
         let helpNavigationController = UINavigationController(rootViewController: helpViewController)
-        helpNavigationController.modalPresentationStyle = .Popover
+        helpNavigationController.modalPresentationStyle = .popover
         helpNavigationController.popoverPresentationController?.barButtonItem = sender
         
-        presentViewController(helpNavigationController, animated: true, completion: nil)
+        present(helpNavigationController, animated: true, completion: nil)
     }
 }

@@ -11,10 +11,10 @@ import Cocoa
 class NeopixelViewControllerOSX: NSViewController {
 
     // Config
-    private static let kShouldAutoconnectToNeopixel = true
+    fileprivate static let kShouldAutoconnectToNeopixel = true
     
     // Constants
-    private static let kUartTimeout = 5.0       // seconds
+    fileprivate static let kUartTimeout = 5.0       // seconds
     
     // UI
     @IBOutlet weak var statusImageView: NSImageView!
@@ -22,13 +22,13 @@ class NeopixelViewControllerOSX: NSViewController {
     @IBOutlet weak var sendButton: NSButton!
     
     // Bluetooth Uart
-    private let uartData = UartManager.sharedInstance
-    private var uartResponseDelegate : ((NSData?)->Void)?
-    private var uartResponseTimer : NSTimer?
+    fileprivate let uartData = UartManager.sharedInstance
+    fileprivate var uartResponseDelegate : ((Data?)->Void)?
+    fileprivate var uartResponseTimer : Timer?
     
     // Neopixel
-    private var isNeopixelSketchAvailable : Bool?
-    private var isSendingData = false
+    fileprivate var isNeopixelSketchAvailable : Bool?
+    fileprivate var isSendingData = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -41,14 +41,14 @@ class NeopixelViewControllerOSX: NSViewController {
     
     func start() {
         DLog("neopixel start");
-        let notificationCenter =  NSNotificationCenter.defaultCenter()
-        notificationCenter.addObserver(self, selector: #selector(NeopixelViewControllerOSX.didReceiveData(_:)), name: UartManager.UartNotifications.DidReceiveData.rawValue, object: nil)
+        let notificationCenter =  NotificationCenter.default
+        notificationCenter.addObserver(self, selector: #selector(NeopixelViewControllerOSX.didReceiveData(_:)), name: NSNotification.Name(rawValue: UartManager.UartNotifications.DidReceiveData.rawValue), object: nil)
     }
     
     func stop() {
         DLog("neopixel stop");
-        let notificationCenter =  NSNotificationCenter.defaultCenter()
-        notificationCenter.removeObserver(self, name: UartManager.UartNotifications.DidReceiveData.rawValue, object: nil)
+        let notificationCenter =  NotificationCenter.default
+        notificationCenter.removeObserver(self, name: NSNotification.Name(rawValue: UartManager.UartNotifications.DidReceiveData.rawValue), object: nil)
         
         cancelUartResponseTimer()
     }
@@ -62,40 +62,40 @@ class NeopixelViewControllerOSX: NSViewController {
     }
     
     // MARK: Notifications
-    func uartIsReady(notification: NSNotification) {
+    func uartIsReady(_ notification: Notification) {
         DLog("Uart is ready")
-        let notificationCenter = NSNotificationCenter.defaultCenter()
-        notificationCenter.removeObserver(self, name: UartManager.UartNotifications.DidBecomeReady.rawValue, object: nil)
+        let notificationCenter = NotificationCenter.default
+        notificationCenter.removeObserver(self, name: NSNotification.Name(rawValue: UartManager.UartNotifications.DidBecomeReady.rawValue), object: nil)
         
-        dispatch_async(dispatch_get_main_queue(),{ [unowned self] in
+        DispatchQueue.main.async(execute: { [unowned self] in
              self.connectNeopixel()
             })
     }
 
     // MARK: - Neopixel Commands
-    private func checkNeopixelSketch() {
+    fileprivate func checkNeopixelSketch() {
         
         // Send version command and check if returns a valid response
         DLog("Ask Version...")
         let text = "V"
-        if let data = text.dataUsingEncoding(NSUTF8StringEncoding) {
+        if let data = text.data(using: String.Encoding.utf8) {
             sendDataToUart(data) { [unowned self] responseData in
                 var isNeopixelSketchAvailable = false
-                if let data = responseData, result = NSString(data:data, encoding: NSUTF8StringEncoding) as? String {
+                if let data = responseData, let result = NSString(data:data, encoding: String.Encoding.utf8.rawValue) as? String {
                     isNeopixelSketchAvailable = result.hasPrefix("Neopixel")
                 }
  
                 DLog("isNeopixelAvailable: \(isNeopixelSketchAvailable)")
                 self.isNeopixelSketchAvailable = isNeopixelSketchAvailable
                 
-                dispatch_async(dispatch_get_main_queue(), { [unowned self] in
+                DispatchQueue.main.async(execute: { [unowned self] in
                     self.updateUI()
                     });
             }
         }
     }
     
-    private func updateUI() {
+    fileprivate func updateUI() {
 
         var statusText = "Connecting..."
         statusImageView.image = NSImage(named: "NSStatusNone")
@@ -106,29 +106,29 @@ class NeopixelViewControllerOSX: NSViewController {
         }
 
         statusLabel.stringValue = statusText
-        sendButton.enabled = isNeopixelSketchAvailable == true && !isSendingData
+        sendButton.isEnabled = isNeopixelSketchAvailable == true && !isSendingData
     }
     
     
     // MARK: - Uart
-    private func sendDataToUart(data: NSData, completionHandler: (response: NSData?)->Void) {
+    fileprivate func sendDataToUart(_ data: Data, completionHandler: @escaping (_ response: Data?)->Void) {
         guard uartResponseDelegate == nil && uartResponseTimer == nil else {
             DLog("sendDataToUart error: waiting for a previous response")
             return
         }
         
-        uartResponseTimer = NSTimer.scheduledTimerWithTimeInterval(NeopixelViewControllerOSX.kUartTimeout, target: self, selector: #selector(NeopixelViewControllerOSX.uartResponseTimeout), userInfo: nil, repeats: false)
+        uartResponseTimer = Timer.scheduledTimer(timeInterval: NeopixelViewControllerOSX.kUartTimeout, target: self, selector: #selector(NeopixelViewControllerOSX.uartResponseTimeout), userInfo: nil, repeats: false)
         uartResponseDelegate = completionHandler
         uartData.sendData(data)
     }
     
     
-    func didReceiveData(notification: NSNotification) {
+    func didReceiveData(_ notification: Notification) {
         if let dataChunk = notification.userInfo?["dataChunk"] as? UartDataChunk {
             if let uartResponseDelegate = uartResponseDelegate {
                 self.uartResponseDelegate = nil
                 cancelUartResponseTimer()
-                uartResponseDelegate(dataChunk.data)
+                uartResponseDelegate(dataChunk.data as Data)
             }
         }
     }
@@ -142,19 +142,19 @@ class NeopixelViewControllerOSX: NSViewController {
         }
     }
     
-    private func cancelUartResponseTimer() {
+    fileprivate func cancelUartResponseTimer() {
         uartResponseTimer?.invalidate()
         uartResponseTimer = nil
     }
     
     // MARK: - Actions
-    @IBAction func onClickSend(sender: AnyObject) {
+    @IBAction func onClickSend(_ sender: AnyObject) {
         let data = NSMutableData()
         
         let width : UInt8 = 8
         let height : UInt8 = 4
         let command : [UInt8] = [0x44, width, height ]           // Command: 'D', Width: 8, Height: 8
-        data.appendBytes(command, length: command.count)
+        data.append(command, length: command.count)
 
         let redPixel : [UInt8] = [32, 1, 1 ]
         let blackPixel : [UInt8] = [0, 0, 0 ]
@@ -162,9 +162,9 @@ class NeopixelViewControllerOSX: NSViewController {
         var imageData : [UInt8] = []
         let imageLength = width * height
         for i in 0..<imageLength {
-            imageData.appendContentsOf(i%2==0 ? redPixel : blackPixel)
+            imageData.append(contentsOf: i%2==0 ? redPixel : blackPixel)
         }
-        data.appendBytes(imageData, length: imageData.count)
+        data.append(imageData, length: imageData.count)
         
         //DLog("Send data: \(hexString(data))")
         /*
@@ -174,15 +174,15 @@ class NeopixelViewControllerOSX: NSViewController {
 */
         
         isSendingData = true
-        sendDataToUart(data) { [unowned self] responseData in
+        sendDataToUart(data as Data) { [unowned self] responseData in
             var success = false
-            if let data = responseData, result = NSString(data:data, encoding: NSUTF8StringEncoding) as? String {
+            if let data = responseData, let result = NSString(data:data, encoding: String.Encoding.utf8.rawValue) as? String {
                 success = result.hasPrefix("OK")
                 }
             
             DLog("configured: \(success)")
             self.isSendingData = false
-            dispatch_async(dispatch_get_main_queue(), { [unowned self] in
+            DispatchQueue.main.async(execute: { [unowned self] in
                 self.updateUI()
                 });
         }
@@ -200,8 +200,8 @@ extension NeopixelViewControllerOSX : DetailTab {
         else {
             DLog("Wait for uart to be ready to start PinIO setup")
             
-            let notificationCenter =  NSNotificationCenter.defaultCenter()
-            notificationCenter.addObserver(self, selector: #selector(NeopixelViewControllerOSX.uartIsReady(_:)), name: UartManager.UartNotifications.DidBecomeReady.rawValue, object: nil)
+            let notificationCenter =  NotificationCenter.default
+            notificationCenter.addObserver(self, selector: #selector(NeopixelViewControllerOSX.uartIsReady(_:)), name: NSNotification.Name(rawValue: UartManager.UartNotifications.DidBecomeReady.rawValue), object: nil)
         }
         
         updateUI()

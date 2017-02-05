@@ -37,21 +37,21 @@ class PeripheralTableViewCell: UITableViewCell {
         txPowerLevelValueLabel.text = nil
     }
 
-    override func setSelected(selected: Bool, animated: Bool) {
+    override func setSelected(_ selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
 
         // Configure the view for the selected state
     }
     
-    @IBAction func onClickDisconnect(sender: AnyObject) {
+    @IBAction func onClickDisconnect(_ sender: AnyObject) {
         onDisconnect?()
     }
     
-    @IBAction func onClickConnect(sender: AnyObject) {
+    @IBAction func onClickConnect(_ sender: AnyObject) {
         onConnect?()
     }
     
-    func showDisconnectButton(show: Bool) {
+    func showDisconnectButton(_ show: Bool) {
         disconnectButtonWidthConstraint.constant = show ? 24: 0
     }
 }

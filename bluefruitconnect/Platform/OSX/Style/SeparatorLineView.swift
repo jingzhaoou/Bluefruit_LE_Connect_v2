@@ -14,7 +14,7 @@ class SeparatorLineView: NSView {
         super.awakeFromNib()
         
         wantsLayer = true
-        layer?.backgroundColor = Color.lightGrayColor().CGColor
+        layer?.backgroundColor = Color.lightGray.cgColor
     }
     
 }

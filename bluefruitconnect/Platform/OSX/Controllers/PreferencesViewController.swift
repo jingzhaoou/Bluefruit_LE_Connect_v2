@@ -85,19 +85,19 @@ class PreferencesViewController: NSViewController {
         if let publishRxTopic = mqttSettings.getPublishTopic(rxSettingsIndex) {
             mqttPublishRXTextField.stringValue = publishRxTopic
         }
-        mqttPublishRXPopupButton.selectItemAtIndex(mqttSettings.getPublishQos(rxSettingsIndex).rawValue)
+        mqttPublishRXPopupButton.selectItem(at: mqttSettings.getPublishQos(rxSettingsIndex).rawValue)
         let txSettingsIndex = 1
         if let publishTxTopic = mqttSettings.getPublishTopic(txSettingsIndex) {
             mqttPublishTXTextField.stringValue = publishTxTopic
         }
-        mqttPublishTXPopupButton.selectItemAtIndex(mqttSettings.getPublishQos(txSettingsIndex).rawValue)
+        mqttPublishTXPopupButton.selectItem(at: mqttSettings.getPublishQos(txSettingsIndex).rawValue)
         
         // Mqtt Subscribe
         mqttSubscribeEnabledButton.state =  mqttSettings.isSubscribeEnabled ? NSOnState : NSOffState
         if let subscribeTopic = mqttSettings.subscribeTopic {
             mqttSubscribeTopicTextField.stringValue = subscribeTopic
         }
-        mqttSubscribeActionPopupButton.selectItemAtIndex(mqttSettings.subscribeBehaviour.rawValue)
+        mqttSubscribeActionPopupButton.selectItem(at: mqttSettings.subscribeBehaviour.rawValue)
     }
     
     override func viewWillAppear() {
@@ -108,34 +108,34 @@ class PreferencesViewController: NSViewController {
     }
     
     // MARK: - Firmware Updates
-    @IBAction func onEndEditingUpdateServerUrl(sender: NSTextField) {
+    @IBAction func onEndEditingUpdateServerUrl(_ sender: NSTextField) {
         // DLog("url: \(sender.stringValue)")
         
-        let url = NSURL(string: sender.stringValue)
+        let url = URL(string: sender.stringValue)
         databaseStatusLabel.stringValue = "Updating database..."
         databaseStatusWaitView.startAnimation(nil)
         
         Preferences.updateServerUrl = url
         
-        FirmwareUpdater.refreshSoftwareUpdatesDatabaseFromUrl(Preferences.updateServerUrl, completionHandler: { [weak self] (success) -> Void in
+        FirmwareUpdater.refreshSoftwareUpdatesDatabase(from: Preferences.updateServerUrl as URL!, completionHandler: { [weak self] (success) -> Void in
             let text = success ?"Database updated successfully" : "Error updating database. Check the URL and Internet connectivity"
             self?.databaseStatusLabel.stringValue = text
             self?.databaseStatusWaitView.stopAnimation(nil)
         })
     }
     
-    @IBAction func onEndEditingIgnoredVesion(sender: NSTextField) {
+    @IBAction func onEndEditingIgnoredVesion(_ sender: NSTextField) {
         // DLog("url: \(sender.stringValue)")
         
         Preferences.softwareUpdateIgnoredVersion = sender.stringValue
     }
     
-    @IBAction func onChangedShowBetaVersions(sender: NSButton) {
+    @IBAction func onChangedShowBetaVersions(_ sender: NSButton) {
         Preferences.showBetaVersions = sender.state == NSOnState
     }
 
     // MARK: - Uart
-    @IBAction func onColorChanged(sender: NSColorWell) {
+    @IBAction func onColorChanged(_ sender: NSColorWell) {
         if (sender == receivedDataColorWell) {
             Preferences.uartReceveivedDataColor = sender.color
         }
@@ -144,19 +144,19 @@ class PreferencesViewController: NSViewController {
         }
     }
     
-    @IBAction func onChangedUartShowInvisibleChars(sender: NSButton) {
+    @IBAction func onChangedUartShowInvisibleChars(_ sender: NSButton) {
         Preferences.uartShowInvisibleChars = sender.state == NSOnState
     }
     
     // MARK: - Mqtt
-    @IBAction func onEndEditingMqttServerUrl(sender: NSTextField) {
+    @IBAction func onEndEditingMqttServerUrl(_ sender: NSTextField) {
         if sender.stringValue != MqttSettings.sharedInstance.serverAddress {
             MqttSettings.sharedInstance.serverAddress = sender.stringValue
             MqttManager.sharedInstance.disconnect()
         }
     }
     
-    @IBAction func onEndEditingMqttServerPort(sender: NSTextField) {
+    @IBAction func onEndEditingMqttServerPort(_ sender: NSTextField) {
         if let port = Int(sender.stringValue) {
             if port != MqttSettings.sharedInstance.serverPort {
                 MqttSettings.sharedInstance.serverPort = port
@@ -165,59 +165,59 @@ class PreferencesViewController: NSViewController {
         }
     }
     
-    @IBAction func onEndEditingMqttUsername(sender: NSTextField) {
+    @IBAction func onEndEditingMqttUsername(_ sender: NSTextField) {
         if sender.stringValue != MqttSettings.sharedInstance.username {
             MqttSettings.sharedInstance.username = sender.stringValue
             MqttManager.sharedInstance.disconnect()
         }
     }
     
-    @IBAction func onEndEditingMqttPassword(sender: NSTextField) {
+    @IBAction func onEndEditingMqttPassword(_ sender: NSTextField) {
         if sender.stringValue != MqttSettings.sharedInstance.password {
             MqttSettings.sharedInstance.password = sender.stringValue
             MqttManager.sharedInstance.disconnect()
         }
     }
     
-    @IBAction func onChangedMqttPublishEnabled(sender: NSButton) {
+    @IBAction func onChangedMqttPublishEnabled(_ sender: NSButton) {
         MqttSettings.sharedInstance.isPublishEnabled = sender.state == NSOnState
     }
     
-    @IBAction func onEndEditingMqttPublishRxTopic(sender: NSTextField) {
+    @IBAction func onEndEditingMqttPublishRxTopic(_ sender: NSTextField) {
         MqttSettings.sharedInstance.setPublishTopic(0, topic: sender.stringValue)
     }
 
-    @IBAction func onChangedMqttPublishRxQos(sender: NSPopUpButton) {
+    @IBAction func onChangedMqttPublishRxQos(_ sender: NSPopUpButton) {
         if let qos =  MqttManager.MqttQos(rawValue: sender.indexOfSelectedItem) {
             MqttSettings.sharedInstance.setPublishQos(0, qos: qos)
         }
     }
     
-    @IBAction func onEndEditingMqttPublishTxTopic(sender: NSTextField) {
+    @IBAction func onEndEditingMqttPublishTxTopic(_ sender: NSTextField) {
         MqttSettings.sharedInstance.setPublishTopic(1, topic: sender.stringValue)
     }
     
-    @IBAction func onChangedMqttPublishTxQos(sender: NSPopUpButton) {
+    @IBAction func onChangedMqttPublishTxQos(_ sender: NSPopUpButton) {
         if let qos =  MqttManager.MqttQos(rawValue: sender.indexOfSelectedItem) {
             MqttSettings.sharedInstance.setPublishQos(1, qos: qos)
         }
     }
 
-    @IBAction func onChangedMqttSubscribeEnabled(sender: NSButton) {
+    @IBAction func onChangedMqttSubscribeEnabled(_ sender: NSButton) {
         MqttSettings.sharedInstance.isSubscribeEnabled = sender.state == NSOnState
     }
 
-    @IBAction func onEndEditingMqttSubscribeTopic(sender: NSTextField) {
+    @IBAction func onEndEditingMqttSubscribeTopic(_ sender: NSTextField) {
         MqttSettings.sharedInstance.subscribeTopic = sender.stringValue
     }
     
-    @IBAction func onChangedMqttSubscribeQos(sender: NSPopUpButton) {
+    @IBAction func onChangedMqttSubscribeQos(_ sender: NSPopUpButton) {
         if let qos =  MqttManager.MqttQos(rawValue: sender.indexOfSelectedItem) {
             MqttSettings.sharedInstance.subscribeQos = qos
         }
     }
     
-    @IBAction func onChangedMqttSubscribeAction(sender: NSPopUpButton) {
+    @IBAction func onChangedMqttSubscribeAction(_ sender: NSPopUpButton) {
         if let behaviour =  MqttSettings.SubscribeBehaviour(rawValue: sender.indexOfSelectedItem) {
             MqttSettings.sharedInstance.subscribeBehaviour = behaviour
         }

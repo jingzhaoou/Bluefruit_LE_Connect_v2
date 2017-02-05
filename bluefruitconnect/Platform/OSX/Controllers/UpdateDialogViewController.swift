@@ -14,7 +14,7 @@ protocol UpdateDialogControllerDelegate: class {
 
 class UpdateDialogViewController: NSViewController {
 
-    @IBOutlet private weak var progressLabel: NSTextField!
+    @IBOutlet fileprivate weak var progressLabel: NSTextField!
     @IBOutlet weak var progressIndicator: NSProgressIndicator!
     @IBOutlet weak var progressPercentageLabel: NSTextField!
     
@@ -27,17 +27,17 @@ class UpdateDialogViewController: NSViewController {
         StatusManager.sharedInstance.updateDialogViewController = self
     }
     
-    func setProgressText(text : String) {
+    func setProgressText(_ text : String) {
         progressLabel.stringValue = text
     }
     
-    func setProgress(value : Double) {
-        progressIndicator.indeterminate = false
+    func setProgress(_ value : Double) {
+        progressIndicator.isIndeterminate = false
         progressIndicator.doubleValue = value
         progressPercentageLabel.stringValue = String(format: "%1.0f%%", value);
     }
     
-    @IBAction func onClickCancel(sender: AnyObject) {
+    @IBAction func onClickCancel(_ sender: AnyObject) {
         delegate?.onUpdateDialogCancel()
     }
 }

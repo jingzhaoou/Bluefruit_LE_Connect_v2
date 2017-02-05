@@ -31,18 +31,18 @@ class UartViewController: NSViewController {
     @IBOutlet weak var saveDialogPopupButton: NSPopUpButton!
     
     // Data
-    private let uartData = UartModuleManager()
+    fileprivate let uartData = UartModuleManager()
     
     // UI
-    private static var dataFont = Font(name: "CourierNewPSMT", size: 13)!
-    private var txColor = Preferences.uartSentDataColor
-    private var rxColor = Preferences.uartReceveivedDataColor
-    private let timestampDateFormatter = NSDateFormatter()
-    private var tableCachedDataBuffer : [UartDataChunk]?
-    private var tableModeDataMaxWidth : CGFloat = 0
+    fileprivate static var dataFont = Font(name: "CourierNewPSMT", size: 13)!
+    fileprivate var txColor = Preferences.uartSentDataColor
+    fileprivate var rxColor = Preferences.uartReceveivedDataColor
+    fileprivate let timestampDateFormatter = DateFormatter()
+    fileprivate var tableCachedDataBuffer : [UartDataChunk]?
+    fileprivate var tableModeDataMaxWidth : CGFloat = 0
 
     // Export
-    private var exportFileDialog: NSSavePanel?
+    fileprivate var exportFileDialog: NSSavePanel?
 
     // MARK:
     override func viewDidLoad() {
@@ -60,7 +60,7 @@ class UartViewController: NSViewController {
         eolButton.state = Preferences.uartIsAutomaticEolEnabled ? NSOnState:NSOffState
         
         // UI
-        baseTableVisibilityView.scrollerStyle = NSScrollerStyle.Legacy      // To avoid autohide behaviour
+        baseTableVisibilityView.scrollerStyle = NSScrollerStyle.legacy      // To avoid autohide behaviour
         reloadDataUI()
         
         // Mqtt init
@@ -91,18 +91,18 @@ class UartViewController: NSViewController {
     
     
     // MARK: - Preferences
-    func registerNotifications(register : Bool) {
+    func registerNotifications(_ register : Bool) {
         
-        let notificationCenter =  NSNotificationCenter.defaultCenter()
+        let notificationCenter =  NotificationCenter.default
         if (register) {
-            notificationCenter.addObserver(self, selector: #selector(UartViewController.preferencesUpdated(_:)), name: Preferences.PreferencesNotifications.DidUpdatePreferences.rawValue, object: nil)
+            notificationCenter.addObserver(self, selector: #selector(UartViewController.preferencesUpdated(_:)), name: NSNotification.Name(rawValue: Preferences.PreferencesNotifications.DidUpdatePreferences.rawValue), object: nil)
         }
         else {
-            notificationCenter.removeObserver(self, name: Preferences.PreferencesNotifications.DidUpdatePreferences.rawValue, object: nil)
+            notificationCenter.removeObserver(self, name: NSNotification.Name(rawValue: Preferences.PreferencesNotifications.DidUpdatePreferences.rawValue), object: nil)
         }
     }
     
-    func preferencesUpdated(notification : NSNotification) {
+    func preferencesUpdated(_ notification : Notification) {
         txColor = Preferences.uartSentDataColor
         rxColor = Preferences.uartReceveivedDataColor
         reloadDataUI()
@@ -112,19 +112,19 @@ class UartViewController: NSViewController {
     
     // MARK: - UI Updates
     func reloadDataUI() {
-        let displayMode = Preferences.uartIsDisplayModeTimestamp ? UartModuleManager.DisplayMode.Table : UartModuleManager.DisplayMode.Text
+        let displayMode = Preferences.uartIsDisplayModeTimestamp ? UartModuleManager.DisplayMode.table : UartModuleManager.DisplayMode.text
         
-        baseTableVisibilityView.hidden = displayMode == .Text
-        baseTextVisibilityView.hidden = displayMode == .Table
+        baseTableVisibilityView.isHidden = displayMode == .text
+        baseTextVisibilityView.isHidden = displayMode == .table
         
         switch(displayMode) {
-        case .Text:
+        case .text:
             if let textStorage = self.baseTextView.textStorage {
                 
                 let isScrollAtTheBottom = baseTextView.enclosingScrollView?.verticalScroller?.floatValue == 1
 
                 textStorage.beginEditing()
-                textStorage.replaceCharactersInRange(NSMakeRange(0, textStorage.length), withAttributedString: NSAttributedString())        // Clear text
+                textStorage.replaceCharacters(in: NSMakeRange(0, textStorage.length), with: NSAttributedString())        // Clear text
                 for dataChunk in uartData.dataBuffer {
                     addChunkToUIText(dataChunk)
                 }
@@ -135,9 +135,9 @@ class UartViewController: NSViewController {
                 
             }
             
-        case .Table:
+        case .table:
             //let isScrollAtTheBottom = tableCachedDataBuffer == nil || tableCachedDataBuffer!.isEmpty  || baseTableView.enclosingScrollView?.verticalScroller?.floatValue == 1
-            let isScrollAtTheBottom = tableCachedDataBuffer == nil || tableCachedDataBuffer!.isEmpty || NSLocationInRange(tableCachedDataBuffer!.count-1, baseTableView.rowsInRect(baseTableView.visibleRect))
+            let isScrollAtTheBottom = tableCachedDataBuffer == nil || tableCachedDataBuffer!.isEmpty || NSLocationInRange(tableCachedDataBuffer!.count-1, baseTableView.rows(in: baseTableView.visibleRect))
 
             baseTableView.sizeLastColumnToFit()
             baseTableView.reloadData()
@@ -158,32 +158,32 @@ class UartViewController: NSViewController {
     }
     
     // MARK: - UI Actions
-    @IBAction func onClickEcho(sender: NSButton) {
+    @IBAction func onClickEcho(_ sender: NSButton) {
         Preferences.uartIsEchoEnabled = echoButton.state == NSOnState
         reloadDataUI()
     }
     
-    @IBAction func onClickEol(sender: NSButton) {
+    @IBAction func onClickEol(_ sender: NSButton) {
         Preferences.uartIsAutomaticEolEnabled = eolButton.state == NSOnState
     }
     
-    @IBAction func onChangeHexMode(sender: AnyObject) {
+    @IBAction func onChangeHexMode(_ sender: AnyObject) {
         Preferences.uartIsInHexMode = sender.selectedSegment == 1
         reloadDataUI()
     }
     
-    @IBAction func onChangeDisplayMode(sender: NSSegmentedControl) {
+    @IBAction func onChangeDisplayMode(_ sender: NSSegmentedControl) {
         Preferences.uartIsDisplayModeTimestamp = sender.selectedSegment == 1
         reloadDataUI()
     }
     
-    @IBAction func onClickClear(sender: NSButton) {
+    @IBAction func onClickClear(_ sender: NSButton) {
         uartData.clearData()
         tableModeDataMaxWidth = 0
         reloadDataUI()
     }
     
-    @IBAction func onClickSend(sender: AnyObject) {
+    @IBAction func onClickSend(_ sender: AnyObject) {
         let text = inputTextField.stringValue
         
         var newText = text
@@ -196,16 +196,16 @@ class UartViewController: NSViewController {
         inputTextField.stringValue = ""
     }
     
-    @IBAction func onClickExport(sender: AnyObject) {
+    @IBAction func onClickExport(_ sender: AnyObject) {
         exportData()
     }
     
-    @IBAction func onClickMqtt(sender: AnyObject) {
+    @IBAction func onClickMqtt(_ sender: AnyObject) {
         
         let mqttManager = MqttManager.sharedInstance
         let status = mqttManager.status
-        if status != .Connected && status != .Connecting {
-            if let serverAddress = MqttSettings.sharedInstance.serverAddress where !serverAddress.isEmpty {
+        if status != .connected && status != .connecting {
+            if let serverAddress = MqttSettings.sharedInstance.serverAddress, !serverAddress.isEmpty {
                 // Server address is defined. Start connection
                 mqttManager.delegate = uartData
                 mqttManager.connectFromSavedSettings()
@@ -215,15 +215,15 @@ class UartViewController: NSViewController {
                 let localizationManager = LocalizationManager.sharedInstance
                 let alert = NSAlert()
                 alert.messageText = localizationManager.localizedString("uart_mqtt_undefinedserver")
-                alert.addButtonWithTitle(localizationManager.localizedString("dialog_ok"))
-                alert.addButtonWithTitle(localizationManager.localizedString("uart_mqtt_editsettings"))
-                alert.alertStyle = .Warning
-                alert.beginSheetModalForWindow(self.view.window!) { [unowned self] (returnCode) -> Void in
+                alert.addButton(withTitle: localizationManager.localizedString("dialog_ok"))
+                alert.addButton(withTitle: localizationManager.localizedString("uart_mqtt_editsettings"))
+                alert.alertStyle = .warning
+                alert.beginSheetModal(for: self.view.window!, completionHandler: { [unowned self] (returnCode) -> Void in
                     if returnCode == NSAlertSecondButtonReturn {
-                        let preferencesViewController = self.storyboard?.instantiateControllerWithIdentifier("PreferencesViewController") as! PreferencesViewController
+                        let preferencesViewController = self.storyboard?.instantiateController(withIdentifier: "PreferencesViewController") as! PreferencesViewController
                         self.presentViewControllerAsModalWindow(preferencesViewController)
                     }
-                }
+                }) 
             }
         }
         else {
@@ -234,16 +234,16 @@ class UartViewController: NSViewController {
     }
     
     // MARK: - Export
-    private func exportData() {
+    fileprivate func exportData() {
         let localizationManager = LocalizationManager.sharedInstance
         
         // Check if data is empty
         guard uartData.dataBuffer.count > 0 else {
             let alert = NSAlert()
             alert.messageText = localizationManager.localizedString("uart_export_nodata")
-            alert.addButtonWithTitle(localizationManager.localizedString("dialog_ok"))
-            alert.alertStyle = .Warning
-            alert.beginSheetModalForWindow(self.view.window!, completionHandler: nil)
+            alert.addButton(withTitle: localizationManager.localizedString("dialog_ok"))
+            alert.alertStyle = .warning
+            alert.beginSheetModal(for: self.view.window!, completionHandler: nil)
             return
         }
         
@@ -265,7 +265,7 @@ class UartViewController: NSViewController {
             //let menuItem = NSMenuItem(title: exportFormat.rawValue, action: nil, keyEquivalent: "")
             //menuItem.representedObject = exportFormat
             //saveDialogPopupButton.menu?.addItem(menuItem)
-            saveDialogPopupButton.addItemWithTitle(exportFormat.rawValue)
+            saveDialogPopupButton.addItem(withTitle: exportFormat.rawValue)
         }
         saveDialogPopupButton.menu?.delegate = self
 
@@ -276,9 +276,9 @@ class UartViewController: NSViewController {
             return
         }
         
-        exportFileDialog.beginSheetModalForWindow(window) {[unowned self] (result) -> Void in
+        exportFileDialog.beginSheetModal(for: window) {[unowned self] (result) -> Void in
             if result == NSFileHandlingPanelOKButton {
-                if let url = exportFileDialog.URL {
+                if let url = exportFileDialog.url {
                     
                     // Save
                     let exportFormatSelected = UartModuleManager.kExportFormats[self.saveDialogPopupButton.indexOfSelectedItem]
@@ -306,29 +306,29 @@ class UartViewController: NSViewController {
         }
     }
     
-    private func exportData(data: NSData?, url: NSURL) {
+    fileprivate func exportData(_ data: Data?, url: URL) {
         do {
-            try data?.writeToURL(url, options: [.DataWritingAtomic])
+            try data?.write(to: url, options: [.atomic])
         }
         catch let error {
             DLog("Error exporting file \(url.absoluteString): \(error)")
         }
     }
     
-    private func exportData(text: String?, url: NSURL) {
+    fileprivate func exportData(_ text: String?, url: URL) {
         do {
-            try text?.writeToURL(url, atomically: true, encoding: NSUTF8StringEncoding)
+            try text?.write(to: url, atomically: true, encoding: String.Encoding.utf8)
         }
         catch let error {
             DLog("Error exporting file \(url.absoluteString): \(error)")
         }
     }
     
-    @IBAction func onExportFormatChanged(sender: AnyObject) {
+    @IBAction func onExportFormatChanged(_ sender: AnyObject) {
         updateSaveFileName()
     }
     
-    private func updateSaveFileName() {
+    fileprivate func updateSaveFileName() {
         
         guard let exportFileDialog = exportFileDialog else {
             return
@@ -348,7 +348,7 @@ class UartViewController: NSViewController {
 
 // MARK: - NSMenuDelegate
 extension UartViewController: NSMenuDelegate {
-    func menuDidClose(menu: NSMenu) {
+    func menuDidClose(_ menu: NSMenu) {
         updateSaveFileName()
     }
 }
@@ -360,8 +360,8 @@ extension UartViewController: DetailTab {
         
         // Check if characteristics are ready
         let isUartReady = uartData.isReady()
-        inputTextField.enabled = isUartReady
-        inputTextField.backgroundColor = isUartReady ? NSColor.whiteColor() : NSColor.blackColor().colorWithAlphaComponent(0.1)
+        inputTextField.isEnabled = isUartReady
+        inputTextField.backgroundColor = isUartReady ? NSColor.white : NSColor.black.withAlphaComponent(0.1)
     }
     
     func tabWillDissapear() {
@@ -384,13 +384,13 @@ extension UartViewController: NSOpenSavePanelDelegate {
 
 // MARK: - NSTableViewDataSource
 extension UartViewController: NSTableViewDataSource {
-    func numberOfRowsInTableView(tableView: NSTableView) -> Int {
+    func numberOfRows(in tableView: NSTableView) -> Int {
         if (Preferences.uartIsEchoEnabled)  {
             tableCachedDataBuffer = uartData.dataBuffer
         }
         else {
             tableCachedDataBuffer = uartData.dataBuffer.filter({ (dataChunk : UartDataChunk) -> Bool in
-                dataChunk.mode == .RX
+                dataChunk.mode == .rx
             })
         }
         
@@ -400,7 +400,7 @@ extension UartViewController: NSTableViewDataSource {
 
 // MARK: NSTableViewDelegate
 extension UartViewController: NSTableViewDelegate {
-    func tableView(tableView: NSTableView, viewForTableColumn tableColumn: NSTableColumn?, row: Int) -> NSView? {
+    func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         
         var cell : NSTableCellView?
         
@@ -409,21 +409,21 @@ extension UartViewController: NSTableViewDelegate {
         if let columnIdentifier = tableColumn?.identifier {
             switch(columnIdentifier) {
             case "TimestampColumn":
-                cell = tableView.makeViewWithIdentifier("TimestampCell", owner: self) as? NSTableCellView
+                cell = tableView.make(withIdentifier: "TimestampCell", owner: self) as? NSTableCellView
                 
-                let date = NSDate(timeIntervalSinceReferenceDate: dataChunk.timestamp)
-                let dateString = timestampDateFormatter.stringFromDate(date)
+                let date = Date(timeIntervalSinceReferenceDate: dataChunk.timestamp)
+                let dateString = timestampDateFormatter.string(from: date)
                 cell!.textField!.stringValue = dateString
                 
             case "DirectionColumn":
-                cell = tableView.makeViewWithIdentifier("DirectionCell", owner: self) as? NSTableCellView
+                cell = tableView.make(withIdentifier: "DirectionCell", owner: self) as? NSTableCellView
                 
-                cell!.textField!.stringValue = dataChunk.mode == .RX ? "RX" : "TX"
+                cell!.textField!.stringValue = dataChunk.mode == .rx ? "RX" : "TX"
                 
             case "DataColumn":
-                cell = tableView.makeViewWithIdentifier("DataCell", owner: self) as? NSTableCellView
+                cell = tableView.make(withIdentifier: "DataCell", owner: self) as? NSTableCellView
                 
-                let color = dataChunk.mode == .TX ? txColor : rxColor
+                let color = dataChunk.mode == .tx ? txColor : rxColor
                 
                 if let attributedText = UartModuleManager.attributeTextFromData(dataChunk.data, useHexMode: Preferences.uartIsInHexMode, color: color, font: UartViewController.dataFont) {
                     //DLog("row \(row): \(attributedText.string)")
@@ -434,7 +434,7 @@ extension UartViewController: NSTableViewDelegate {
                     // Update column width (if needed)
                     let width = attributedText.size().width
                     tableModeDataMaxWidth = max(tableColumn!.width, width)
-                    dispatch_async(dispatch_get_main_queue(), {     // Important: Execute async. This change should be done outside the delegate method to avoid weird reuse cell problems (reused cell shows old data and cant be changed).
+                    DispatchQueue.main.async(execute: {     // Important: Execute async. This change should be done outside the delegate method to avoid weird reuse cell problems (reused cell shows old data and cant be changed).
                         if (tableColumn!.width < self.tableModeDataMaxWidth) {
                             tableColumn!.width = self.tableModeDataMaxWidth
                         }
@@ -454,10 +454,10 @@ extension UartViewController: NSTableViewDelegate {
         return cell;
     }
     
-    func tableViewSelectionDidChange(notification: NSNotification) {
+    func tableViewSelectionDidChange(_ notification: Notification) {
     }
     
-    func tableViewColumnDidResize(notification: NSNotification) {
+    func tableViewColumnDidResize(_ notification: Notification) {
         if let tableColumn = notification.userInfo?["NSTableColumn"] as? NSTableColumn {
             if (tableColumn.identifier == "DataColumn") {
                 // If the window is resized, maintain the column width
@@ -472,16 +472,16 @@ extension UartViewController: NSTableViewDelegate {
 
 // MARK: - UartModuleDelegate
 extension UartViewController: UartModuleDelegate {
-    func addChunkToUI(dataChunk : UartDataChunk) {
+    func addChunkToUI(_ dataChunk : UartDataChunk) {
         // Check that the view has been initialized before updating UI
         guard baseTableView != nil else {
             return;
         }
         
-        let displayMode = Preferences.uartIsDisplayModeTimestamp ? UartModuleManager.DisplayMode.Table : UartModuleManager.DisplayMode.Text
+        let displayMode = Preferences.uartIsDisplayModeTimestamp ? UartModuleManager.DisplayMode.table : UartModuleManager.DisplayMode.text
         
         switch(displayMode) {
-        case .Text:
+        case .text:
             if let textStorage = self.baseTextView.textStorage {
                 let isScrollAtTheBottom = baseTextView.enclosingScrollView?.verticalScroller?.floatValue == 1
                 
@@ -493,8 +493,8 @@ extension UartViewController: UartModuleDelegate {
                 }
             }
             
-        case .Table:
-            let isScrollAtTheBottom = tableCachedDataBuffer == nil || tableCachedDataBuffer!.isEmpty || NSLocationInRange(tableCachedDataBuffer!.count-1, baseTableView.rowsInRect(baseTableView.visibleRect))
+        case .table:
+            let isScrollAtTheBottom = tableCachedDataBuffer == nil || tableCachedDataBuffer!.isEmpty || NSLocationInRange(tableCachedDataBuffer!.count-1, baseTableView.rows(in: baseTableView.visibleRect))
             //let isScrollAtTheBottom = tableCachedDataBuffer == nil || tableCachedDataBuffer!.isEmpty  || baseTableView.enclosingScrollView?.verticalScroller?.floatValue == 1
             
             baseTableView.reloadData()
@@ -507,15 +507,15 @@ extension UartViewController: UartModuleDelegate {
         updateBytesUI()
     }
     
-    private func addChunkToUIText(dataChunk : UartDataChunk) {
+    fileprivate func addChunkToUIText(_ dataChunk : UartDataChunk) {
         
-        if (Preferences.uartIsEchoEnabled || dataChunk.mode == .RX) {
-            let color = dataChunk.mode == .TX ? txColor : rxColor
+        if (Preferences.uartIsEchoEnabled || dataChunk.mode == .rx) {
+            let color = dataChunk.mode == .tx ? txColor : rxColor
             
             let attributedString = UartModuleManager.attributeTextFromData(dataChunk.data, useHexMode: Preferences.uartIsInHexMode, color: color, font: UartViewController.dataFont)
             
-            if let textStorage = self.baseTextView.textStorage, attributedString = attributedString {
-                textStorage.appendAttributedString(attributedString)
+            if let textStorage = self.baseTextView.textStorage, let attributedString = attributedString {
+                textStorage.append(attributedString)
             }
         }
     }
@@ -527,11 +527,11 @@ extension UartViewController: UartModuleDelegate {
         var buttonTitle = localizationManager.localizedString("uart_mqtt_status_default")
         
         switch (status) {
-        case .Connecting:
+        case .connecting:
             buttonTitle = localizationManager.localizedString("uart_mqtt_status_connecting")
             
             
-        case .Connected:
+        case .connected:
             buttonTitle = localizationManager.localizedString("uart_mqtt_status_connected")
             
             
@@ -543,22 +543,22 @@ extension UartViewController: UartModuleDelegate {
         mqttStatusButton.title = buttonTitle
     }
     
-    func mqttError(message: String, isConnectionError: Bool) {
+    func mqttError(_ message: String, isConnectionError: Bool) {
         let localizationManager = LocalizationManager.sharedInstance
         let alert = NSAlert()
         alert.messageText = isConnectionError ? localizationManager.localizedString("uart_mqtt_connectionerror_title"): message
-        alert.addButtonWithTitle(localizationManager.localizedString("dialog_ok"))
+        alert.addButton(withTitle: localizationManager.localizedString("dialog_ok"))
         if (isConnectionError) {
-            alert.addButtonWithTitle(localizationManager.localizedString("uart_mqtt_editsettings_action"))
+            alert.addButton(withTitle: localizationManager.localizedString("uart_mqtt_editsettings_action"))
             alert.informativeText = message
         }
-        alert.alertStyle = .Warning
-        alert.beginSheetModalForWindow(self.view.window!) { [unowned self] (returnCode) -> Void in
+        alert.alertStyle = .warning
+        alert.beginSheetModal(for: self.view.window!, completionHandler: { [unowned self] (returnCode) -> Void in
             if isConnectionError && returnCode == NSAlertSecondButtonReturn {
-                let preferencesViewController = self.storyboard?.instantiateControllerWithIdentifier("PreferencesViewController") as! PreferencesViewController
+                let preferencesViewController = self.storyboard?.instantiateController(withIdentifier: "PreferencesViewController") as! PreferencesViewController
                 self.presentViewControllerAsModalWindow(preferencesViewController)
             }
-        }
+        }) 
     }
 }
 
@@ -566,32 +566,32 @@ extension UartViewController: UartModuleDelegate {
 extension UartViewController: CBPeripheralDelegate {
     // Pass peripheral callbacks to UartData
     
-    func peripheral(peripheral: CBPeripheral, didModifyServices invalidatedServices: [CBService]) {
+    func peripheral(_ peripheral: CBPeripheral, didModifyServices invalidatedServices: [CBService]) {
         uartData.peripheral(peripheral, didModifyServices: invalidatedServices)
     }
     
-    func peripheral(peripheral: CBPeripheral, didDiscoverServices error: NSError?) {
+    func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         uartData.peripheral(peripheral, didDiscoverServices:error)
     }
     
-    func peripheral(peripheral: CBPeripheral, didDiscoverCharacteristicsForService service: CBService, error: NSError?) {
+    func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
         
-        uartData.peripheral(peripheral, didDiscoverCharacteristicsForService: service, error: error)
+        uartData.peripheral(peripheral, didDiscoverCharacteristicsFor: service, error: error)
         
         // Check if ready
         if uartData.isReady() {
             // Enable input
-            dispatch_async(dispatch_get_main_queue(), { [unowned self] in
+            DispatchQueue.main.async(execute: { [unowned self] in
                 if self.inputTextField != nil {     // could be nil if the viewdidload has not been executed yet
-                    self.inputTextField.enabled = true
-                    self.inputTextField.backgroundColor = NSColor.whiteColor()
+                    self.inputTextField.isEnabled = true
+                    self.inputTextField.backgroundColor = NSColor.white
                 }
                 });
         }
     }
     
-    func peripheral(peripheral: CBPeripheral, didUpdateValueForCharacteristic characteristic: CBCharacteristic, error: NSError?) {
-      uartData.peripheral(peripheral, didUpdateValueForCharacteristic: characteristic, error: error)
+    func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
+      uartData.peripheral(peripheral, didUpdateValueFor: characteristic, error: error)
     }
 }
 

@@ -20,9 +20,9 @@ class SeparatorView: NSView {
         commonSetup()
     }
     
-    private func commonSetup() {
+    fileprivate func commonSetup() {
         wantsLayer = true
-        layer?.backgroundColor = NSColor.blackColor().colorWithAlphaComponent(0.2).CGColor
+        layer?.backgroundColor = NSColor.black.withAlphaComponent(0.2).cgColor
     }
     
     /*

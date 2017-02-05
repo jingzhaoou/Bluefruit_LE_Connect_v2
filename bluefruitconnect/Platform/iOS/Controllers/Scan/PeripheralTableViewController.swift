@@ -27,11 +27,11 @@ class PeripheralTableViewController: UIViewController {
     @IBOutlet weak var filtersUartSwitch: UISwitch!
     
     // Data
-    private let refreshControl = UIRefreshControl()
-    private var peripheralList: PeripheralList!
-    private var tableRowOpen: Int?
-    private var tableRowOpenPeripheralIdentifier: String?
-    private var cachedNumOfTableItems = 0
+    fileprivate let refreshControl = UIRefreshControl()
+    fileprivate var peripheralList: PeripheralList!
+    fileprivate var tableRowOpen: Int?
+    fileprivate var tableRowOpenPeripheralIdentifier: String?
+    fileprivate var cachedNumOfTableItems = 0
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -39,16 +39,16 @@ class PeripheralTableViewController: UIViewController {
         peripheralList = PeripheralList()                  // Initialize here to wait for Preferences.registerDefaults to be executed
         
         // Setup filters
-        filtersNameTextField.leftViewMode = .Always
+        filtersNameTextField.leftViewMode = .always
         let searchImageView = UIImageView(image: UIImage(named: "ic_search_18pt"))
-        searchImageView.contentMode = UIViewContentMode.Right
-        searchImageView.frame = CGRectMake(0.0, 0.0, searchImageView.image!.size.width + 6.0, searchImageView.image!.size.height)
+        searchImageView.contentMode = UIViewContentMode.right
+        searchImageView.frame = CGRect(x: 0.0, y: 0.0, width: searchImageView.image!.size.width + 6.0, height: searchImageView.image!.size.height)
         filtersNameTextField.leftView = searchImageView
         
         // Setup table refresh
-        refreshControl.addTarget(self, action: #selector(onTableRefresh(_:)), forControlEvents: UIControlEvents.ValueChanged)
+        refreshControl.addTarget(self, action: #selector(onTableRefresh(_:)), for: UIControlEvents.valueChanged)
         baseTableView.addSubview(refreshControl)
-        baseTableView.sendSubviewToBack(refreshControl)
+        baseTableView.sendSubview(toBack: refreshControl)
         
         // Setup table view
         baseTableView.estimatedRowHeight = 66
@@ -61,10 +61,10 @@ class PeripheralTableViewController: UIViewController {
         let localizationManager = LocalizationManager.sharedInstance
         self.title = localizationManager.localizedString("peripherallist_splitmasterbutton")
         self.navigationItem.title = LocalizationManager.sharedInstance.localizedString("peripherallist_title")
-        self.navigationItem.backBarButtonItem = UIBarButtonItem(title: localizationManager.localizedString("peripherallist_backbutton"), style: .Plain, target: nil, action: nil)
+        self.navigationItem.backBarButtonItem = UIBarButtonItem(title: localizationManager.localizedString("peripherallist_backbutton"), style: .plain, target: nil, action: nil)
     }
     
-    override func viewWillAppear(animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         //self.clearsSelectionOnViewWillAppear = self.splitViewController!.collapsed
         
@@ -73,22 +73,22 @@ class PeripheralTableViewController: UIViewController {
         updateFiltersTitle()
         filtersNameTextField.text = peripheralList.filterName ?? ""
         setRssiSliderValue(peripheralList.rssiFilterValue)
-        filtersUnnamedSwitch.on = peripheralList.isUnnamedEnabled
-        filtersUartSwitch.on = peripheralList.isOnlyUartEnabled
+        filtersUnnamedSwitch.isOn = peripheralList.isUnnamedEnabled
+        filtersUartSwitch.isOn = peripheralList.isOnlyUartEnabled
         
         // Ble State error check
         didUpdateBleState(nil)      // Force update state to show any pending errors
         
         // Subscribe to Ble Notifications
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(didDiscoverPeripheral(_:)), name: BleManager.BleNotifications.DidDiscoverPeripheral.rawValue, object: nil)
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(didDiscoverPeripheral(_:)), name: BleManager.BleNotifications.DidUnDiscoverPeripheral.rawValue, object: nil)
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(didDisconnectFromPeripheral(_:)), name: BleManager.BleNotifications.DidDisconnectFromPeripheral.rawValue, object: nil)
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(didConnectToPeripheral(_:)), name: BleManager.BleNotifications.DidConnectToPeripheral.rawValue, object: nil)
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(willConnectToPeripheral(_:)), name: BleManager.BleNotifications.WillConnectToPeripheral.rawValue, object: nil)
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(didUpdateBleState(_:)), name: BleManager.BleNotifications.DidUpdateBleState.rawValue, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(didDiscoverPeripheral(_:)), name: NSNotification.Name(rawValue: BleManager.BleNotifications.DidDiscoverPeripheral.rawValue), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(didDiscoverPeripheral(_:)), name: NSNotification.Name(rawValue: BleManager.BleNotifications.DidUnDiscoverPeripheral.rawValue), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(didDisconnectFromPeripheral(_:)), name: NSNotification.Name(rawValue: BleManager.BleNotifications.DidDisconnectFromPeripheral.rawValue), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(didConnectToPeripheral(_:)), name: NSNotification.Name(rawValue: BleManager.BleNotifications.DidConnectToPeripheral.rawValue), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(willConnectToPeripheral(_:)), name: NSNotification.Name(rawValue: BleManager.BleNotifications.WillConnectToPeripheral.rawValue), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(didUpdateBleState(_:)), name: NSNotification.Name(rawValue: BleManager.BleNotifications.DidUpdateBleState.rawValue), object: nil)
         
         
-        let isFullScreen = UIScreen.mainScreen().traitCollection.horizontalSizeClass == .Compact
+        let isFullScreen = UIScreen.main.traitCollection.horizontalSizeClass == .compact
         if isFullScreen {
             peripheralList.connectToPeripheral(nil)
         }
@@ -103,19 +103,19 @@ class PeripheralTableViewController: UIViewController {
         
     }
     
-    override func viewWillDisappear(animated: Bool) {
+    override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         
-        NSNotificationCenter.defaultCenter().removeObserver(self, name: BleManager.BleNotifications.DidDiscoverPeripheral.rawValue, object: nil)
-        NSNotificationCenter.defaultCenter().removeObserver(self, name: BleManager.BleNotifications.DidUnDiscoverPeripheral.rawValue, object: nil)
-        NSNotificationCenter.defaultCenter().removeObserver(self, name: BleManager.BleNotifications.DidDisconnectFromPeripheral.rawValue, object: nil)
-        NSNotificationCenter.defaultCenter().removeObserver(self, name: BleManager.BleNotifications.DidConnectToPeripheral.rawValue, object: nil)
-        NSNotificationCenter.defaultCenter().removeObserver(self, name: BleManager.BleNotifications.WillConnectToPeripheral.rawValue, object: nil)
-        NSNotificationCenter.defaultCenter().removeObserver(self, name: BleManager.BleNotifications.DidUpdateBleState.rawValue, object: nil)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: BleManager.BleNotifications.DidDiscoverPeripheral.rawValue), object: nil)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: BleManager.BleNotifications.DidUnDiscoverPeripheral.rawValue), object: nil)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: BleManager.BleNotifications.DidDisconnectFromPeripheral.rawValue), object: nil)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: BleManager.BleNotifications.DidConnectToPeripheral.rawValue), object: nil)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: BleManager.BleNotifications.WillConnectToPeripheral.rawValue), object: nil)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: BleManager.BleNotifications.DidUpdateBleState.rawValue), object: nil)
         
     }
     
-    private func reloadData() {
+    fileprivate func reloadData() {
         //
         synchronize(self) { [unowned self] in
             self.baseTableView.reloadData()
@@ -129,8 +129,8 @@ class PeripheralTableViewController: UIViewController {
     
     
     // MARK: - Notifications
-    func didDiscoverPeripheral(notification: NSNotification) {
-        dispatch_async(dispatch_get_main_queue(), {[weak self] in
+    func didDiscoverPeripheral(_ notification: Notification) {
+        DispatchQueue.main.async(execute: {[weak self] in
             
             if let context = self {
                 
@@ -142,7 +142,7 @@ class PeripheralTableViewController: UIViewController {
 
                     // Update row open if still available
                     if let tableRowOpenPeripheralIdentifier = context.tableRowOpenPeripheralIdentifier {
-                        context.tableRowOpen = filteredPeripherals.indexOf(tableRowOpenPeripheralIdentifier)
+                        context.tableRowOpen = filteredPeripherals.index(of: tableRowOpenPeripheralIdentifier)
                     }
                     else {
                         context.tableRowOpen = nil
@@ -152,7 +152,7 @@ class PeripheralTableViewController: UIViewController {
                     
                     // Select identifier if still available
                     if let selectedPeripheralRow = self?.peripheralList.selectedPeripheralRow {
-                        context.baseTableView.selectRowAtIndexPath(NSIndexPath(forRow: selectedPeripheralRow, inSection: 0), animated: false, scrollPosition: .None)
+                        context.baseTableView.selectRow(at: IndexPath(row: selectedPeripheralRow, section: 0), animated: false, scrollPosition: .none)
                     }
                     
                     
@@ -163,14 +163,14 @@ class PeripheralTableViewController: UIViewController {
             })
     }
     
-    func willConnectToPeripheral(notification: NSNotification) {
-        let isFullScreen = UIScreen.mainScreen().traitCollection.horizontalSizeClass == .Compact
+    func willConnectToPeripheral(_ notification: Notification) {
+        let isFullScreen = UIScreen.main.traitCollection.horizontalSizeClass == .compact
         if isFullScreen {
-            dispatch_async(dispatch_get_main_queue(), {[unowned self] in
+            DispatchQueue.main.async(execute: {[unowned self] in
                 let localizationManager = LocalizationManager.sharedInstance
-                let alertController = UIAlertController(title: nil, message: localizationManager.localizedString("peripheraldetails_connecting"), preferredStyle: .Alert)
+                let alertController = UIAlertController(title: nil, message: localizationManager.localizedString("peripheraldetails_connecting"), preferredStyle: .alert)
                 
-                alertController.addAction(UIAlertAction(title: localizationManager.localizedString("dialog_cancel"), style: .Cancel, handler: { (_) -> Void in
+                alertController.addAction(UIAlertAction(title: localizationManager.localizedString("dialog_cancel"), style: .cancel, handler: { (_) -> Void in
                     if let peripheral = BleManager.sharedInstance.blePeripheralConnecting {
                         BleManager.sharedInstance.disconnect(peripheral)
                     }
@@ -178,39 +178,39 @@ class PeripheralTableViewController: UIViewController {
                         BleManager.sharedInstance.disconnect(peripheral)
                     }
                 }))
-                self.presentViewController(alertController, animated: true, completion:nil)
+                self.present(alertController, animated: true, completion:nil)
                 })
         }
     }
     
-    func didConnectToPeripheral(notification: NSNotification) {
+    func didConnectToPeripheral(_ notification: Notification) {
         // Watch
         WatchSessionManager.sharedInstance.updateApplicationContext(.Connected)
         
         // Connection is managed here if the device is in compact mode
-        let isFullScreen = UIScreen.mainScreen().traitCollection.horizontalSizeClass == .Compact
+        let isFullScreen = UIScreen.main.traitCollection.horizontalSizeClass == .compact
         if isFullScreen {
             DLog("list: connection on compact mode detected")
             
             let kTimeToWaitForPeripheralConnectionError: Double = 0.5
-            let time = dispatch_time(dispatch_time_t(DISPATCH_TIME_NOW), Int64(kTimeToWaitForPeripheralConnectionError * Double(NSEC_PER_SEC)))
-            dispatch_after(time, dispatch_get_main_queue()) { [unowned self] in
+            let time = DispatchTime(uptimeNanoseconds: DispatchTime.now().uptimeNanoseconds) + Double(Int64(kTimeToWaitForPeripheralConnectionError * Double(NSEC_PER_SEC))) / Double(NSEC_PER_SEC)
+            DispatchQueue.main.asyncAfter(deadline: time) { [unowned self] in
                 
                 if BleManager.sharedInstance.blePeripheralConnected != nil {
                     
                     // Deselect current row
                     if let indexPathForSelectedRow = self.baseTableView.indexPathForSelectedRow {
-                        self.baseTableView.deselectRowAtIndexPath(indexPathForSelectedRow, animated: true)
+                        self.baseTableView.deselectRow(at: indexPathForSelectedRow, animated: true)
                     }
                     
                     // Dismiss current dialog
                     if self.presentedViewController != nil {
-                        self.dismissViewControllerAnimated(true, completion: { [unowned self] () -> Void in
-                            self.performSegueWithIdentifier("showDetailSegue", sender: self)
+                        self.dismiss(animated: true, completion: { [unowned self] () -> Void in
+                            self.performSegue(withIdentifier: "showDetailSegue", sender: self)
                             })
                     }
                     else {
-                        self.performSegueWithIdentifier("showDetailSegue", sender: self)
+                        self.performSegue(withIdentifier: "showDetailSegue", sender: self)
                     }
                 }
                 else {
@@ -220,7 +220,7 @@ class PeripheralTableViewController: UIViewController {
         }
     }
     
-    func didUpdateBleState(notification: NSNotification?) {
+    func didUpdateBleState(_ notification: Notification?) {
         guard let state = BleManager.sharedInstance.centralManager?.state else {
             return
         }
@@ -228,11 +228,11 @@ class PeripheralTableViewController: UIViewController {
         // Check if there is any error
         var errorMessage: String?
         switch state {
-        case .Unsupported:
+        case .unsupported:
             errorMessage = "This device doesn't support Bluetooth Low Energy"
-        case .Unauthorized:
+        case .unauthorized:
             errorMessage = "This app is not authorized to use the Bluetooth Low Energy"
-        case.PoweredOff:
+        case.poweredOff:
             errorMessage = "Bluetooth is currently powered off"
             
         default:
@@ -242,19 +242,19 @@ class PeripheralTableViewController: UIViewController {
         // Show alert if error found
         if let errorMessage = errorMessage {
             let localizationManager = LocalizationManager.sharedInstance
-            let alertController = UIAlertController(title: localizationManager.localizedString("dialog_error"), message: errorMessage, preferredStyle: .Alert)
-            let okAction = UIAlertAction(title: localizationManager.localizedString("dialog_ok"), style: .Default, handler: { (_) -> Void in
+            let alertController = UIAlertController(title: localizationManager.localizedString("dialog_error"), message: errorMessage, preferredStyle: .alert)
+            let okAction = UIAlertAction(title: localizationManager.localizedString("dialog_ok"), style: .default, handler: { (_) -> Void in
                 if let navController = self.splitViewController?.viewControllers[0] as? UINavigationController {
-                    navController.popViewControllerAnimated(true)
+                    navController.popViewController(animated: true)
                 }
             })
             
             alertController.addAction(okAction)
-            self.presentViewController(alertController, animated: true, completion: nil)
+            self.present(alertController, animated: true, completion: nil)
         }
     }
     
-    override func shouldPerformSegueWithIdentifier(identifier: String, sender: AnyObject?) -> Bool {
+    override func shouldPerformSegue(withIdentifier identifier: String, sender: Any?) -> Bool {
         if identifier == "showDetailSegue" {
             let isPeripheralStillConnected = BleManager.sharedInstance.blePeripheralConnected != nil  // peripheral should still be connected
             //DLog("shouldPerformSegueWithIdentifier: \(isPeripheralStillConnected)")
@@ -264,17 +264,17 @@ class PeripheralTableViewController: UIViewController {
     }
     
     
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "showDetailSegue" {
             //DLog("destination: \(segue.destinationViewController)")
-            let peripheralDetailsViewController = (segue.destinationViewController as! UINavigationController).topViewController as! PeripheralDetailsViewController
+            let peripheralDetailsViewController = (segue.destination as! UINavigationController).topViewController as! PeripheralDetailsViewController
             peripheralDetailsViewController.selectedBlePeripheral = BleManager.sharedInstance.blePeripheralConnected
         }
         else  if segue.identifier == "filterNameSettingsSegue"  {
-            if let controller = segue.destinationViewController.popoverPresentationController {
+            if let controller = segue.destination.popoverPresentationController {
                 controller.delegate = self
                 
-                let filterNameSettingsViewController = segue.destinationViewController as! FilterTextSettingsViewController
+                let filterNameSettingsViewController = segue.destination as! FilterTextSettingsViewController
                 filterNameSettingsViewController.peripheralList = peripheralList
                 filterNameSettingsViewController.onSettingsChanged = { [unowned self] in
                     self.updateFilters()
@@ -283,16 +283,16 @@ class PeripheralTableViewController: UIViewController {
         }
     }
     
-    func didDisconnectFromPeripheral(notification : NSNotification) {
+    func didDisconnectFromPeripheral(_ notification : Notification) {
         // Watch
         WatchSessionManager.sharedInstance.updateApplicationContext(.Scan)
         
         //
-        dispatch_async(dispatch_get_main_queue(), {[unowned self] in
+        DispatchQueue.main.async(execute: {[unowned self] in
             DLog("list: disconnection detected a")
             self.peripheralList.disconnected()
             
-            let isFullScreen = UIScreen.mainScreen().traitCollection.horizontalSizeClass == .Compact
+            let isFullScreen = UIScreen.main.traitCollection.horizontalSizeClass == .compact
             
             if BleManager.sharedInstance.blePeripheralConnected == nil, let indexPathForSelectedRow = self.baseTableView.indexPathForSelectedRow {
                 DLog("list: disconnection detected b")
@@ -300,7 +300,7 @@ class PeripheralTableViewController: UIViewController {
                 // Unexpected disconnect if the row is still selected but the connected peripheral is nil and the time since the user selected a new peripheral is bigger than kMinTimeSinceUserSelection second
                 // let kMinTimeSinceUserSelection = 1.0    // in secs
                 // if self.peripheralList.elapsedTimeSinceSelection > kMinTimeSinceUserSelection {
-                self.baseTableView.deselectRowAtIndexPath(indexPathForSelectedRow, animated: true)
+                self.baseTableView.deselectRow(at: indexPathForSelectedRow, animated: true)
                 
                 DLog("list: disconnection detected c")
                 
@@ -308,7 +308,7 @@ class PeripheralTableViewController: UIViewController {
                     
                     DLog("list: compact mode show alert")
                     if self.presentedViewController != nil {
-                        self.dismissViewControllerAnimated(true, completion: { () -> Void in
+                        self.dismiss(animated: true, completion: { () -> Void in
                             self.showPeripheralDisconnectedDialog()
                         })
                     }
@@ -327,94 +327,94 @@ class PeripheralTableViewController: UIViewController {
             })
     }
     
-    private func showPeripheralDisconnectedDialog() {
+    fileprivate func showPeripheralDisconnectedDialog() {
         let localizationManager = LocalizationManager.sharedInstance
-        let alertController = UIAlertController(title: nil, message: localizationManager.localizedString("peripherallist_peripheraldisconnected"), preferredStyle: .Alert)
-        let okAction = UIAlertAction(title: localizationManager.localizedString("dialog_ok"), style: .Default, handler: { (_) -> Void in
+        let alertController = UIAlertController(title: nil, message: localizationManager.localizedString("peripherallist_peripheraldisconnected"), preferredStyle: .alert)
+        let okAction = UIAlertAction(title: localizationManager.localizedString("dialog_ok"), style: .default, handler: { (_) -> Void in
             if let navController = self.splitViewController?.viewControllers[0] as? UINavigationController {
-                navController.popViewControllerAnimated(true)
+                navController.popViewController(animated: true)
             }
         })
         
         alertController.addAction(okAction)
-        self.presentViewController(alertController, animated: true, completion: nil)
+        self.present(alertController, animated: true, completion: nil)
     }
     
     
     // MARK: - Filters
-    private func openFiltersPanel(isOpen: Bool, animated: Bool) {
+    fileprivate func openFiltersPanel(_ isOpen: Bool, animated: Bool) {
         
         Preferences.scanFilterIsPanelOpen = isOpen
-        self.filtersDisclosureButton.selected = isOpen
+        self.filtersDisclosureButton.isSelected = isOpen
         
         self.filtersPanelViewHeightConstraint.constant = isOpen ? PeripheralTableViewController.kFiltersPanelOpenHeight:PeripheralTableViewController.kFiltersPanelClosedHeight
-        UIView.animateWithDuration(animated ? 0.3:0) { [unowned self] in
+        UIView.animate(withDuration: animated ? 0.3:0, animations: { [unowned self] in
             self.view.layoutIfNeeded()
-        }
+        }) 
     }
     
-    private func updateFiltersTitle() {
+    fileprivate func updateFiltersTitle() {
         let filtersTitle = peripheralList.filtersDescription()
         filtersTitleLabel.text = filtersTitle != nil ? "Filter: \(filtersTitle!)" : "No filter selected"
         
-        filtersClearButton.hidden = !peripheralList.isAnyFilterEnabled()
+        filtersClearButton.isHidden = !peripheralList.isAnyFilterEnabled()
     }
     
-    private func updateFilters() {
+    fileprivate func updateFilters() {
         updateFiltersTitle()
         baseTableView.reloadData()
     }
     
-    private func setRssiSliderValue(value: Int?) {
+    fileprivate func setRssiSliderValue(_ value: Int?) {
         filtersRssiSlider.value = value != nil ? Float(-value!) : 100.0
         updateRssiValueLabel()
     }
     
-    private func updateRssiValueLabel() {
+    fileprivate func updateRssiValueLabel() {
         filterRssiValueLabel.text = "\(Int(-filtersRssiSlider.value)) dBM"
     }
 
     // MARK: - Actions
-    func onTableRefresh(sender: AnyObject) {
+    func onTableRefresh(_ sender: AnyObject) {
         tableRowOpen = nil
         tableRowOpenPeripheralIdentifier = nil
         BleManager.sharedInstance.refreshPeripherals()
         refreshControl.endRefreshing()
     }
     
-    @IBAction func onClickExpandFilters(sender: AnyObject) {
+    @IBAction func onClickExpandFilters(_ sender: AnyObject) {
         openFiltersPanel(!Preferences.scanFilterIsPanelOpen, animated: true)
     }
     
-    @IBAction func onFilterNameChanged(sender: UITextField) {
-        let isEmpty = sender.text?.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceAndNewlineCharacterSet()).isEmpty ?? true
+    @IBAction func onFilterNameChanged(_ sender: UITextField) {
+        let isEmpty = sender.text?.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).isEmpty ?? true
         peripheralList.filterName = isEmpty ? nil:sender.text
         updateFilters()
     }
     
-    @IBAction func onRssiSliderChanged(sender: UISlider) {
+    @IBAction func onRssiSliderChanged(_ sender: UISlider) {
         let rssiValue = Int(-sender.value)
         peripheralList.rssiFilterValue = rssiValue
         updateRssiValueLabel()
         updateFilters()
     }
     
-    @IBAction func onFilterSettingsUnnamedChanged(sender: UISwitch) {
-        peripheralList.isUnnamedEnabled = sender.on
+    @IBAction func onFilterSettingsUnnamedChanged(_ sender: UISwitch) {
+        peripheralList.isUnnamedEnabled = sender.isOn
         updateFilters()
     }
     
-    @IBAction func onFilterSettingsUartChanged(sender: UISwitch) {
-        peripheralList.isOnlyUartEnabled = sender.on
+    @IBAction func onFilterSettingsUartChanged(_ sender: UISwitch) {
+        peripheralList.isOnlyUartEnabled = sender.isOn
         updateFilters()
     }
     
-    @IBAction func onClickRemoveFilters(sender: AnyObject) {
+    @IBAction func onClickRemoveFilters(_ sender: AnyObject) {
         peripheralList.setDefaultFilters()
         filtersNameTextField.text = peripheralList.filterName ?? ""
         setRssiSliderValue(peripheralList.rssiFilterValue)
-        filtersUnnamedSwitch.on = peripheralList.isUnnamedEnabled
-        filtersUartSwitch.on = peripheralList.isOnlyUartEnabled
+        filtersUnnamedSwitch.isOn = peripheralList.isUnnamedEnabled
+        filtersUartSwitch.isOn = peripheralList.isOnlyUartEnabled
         updateFilters()
     }
 }
@@ -422,7 +422,7 @@ class PeripheralTableViewController: UIViewController {
 // MARK: - UITableViewDataSource
 extension PeripheralTableViewController: UITableViewDataSource {
     
-    func numberOfSectionsInTableView(tableView: UITableView) -> Int {
+    func numberOfSections(in tableView: UITableView) -> Int {
         return 1
     }
     
@@ -432,7 +432,7 @@ extension PeripheralTableViewController: UITableViewDataSource {
     }
     */
     
-    func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         // Hack to update watch when the cell count changes
         WatchSessionManager.sharedInstance.updateApplicationContext(.Scan)
         
@@ -441,8 +441,8 @@ extension PeripheralTableViewController: UITableViewDataSource {
         return cachedNumOfTableItems
     }
     
-    func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCellWithIdentifier("PeripheralCell", forIndexPath: indexPath)
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "PeripheralCell", for: indexPath)
         
         let row = indexPath.row
         let bleManager = BleManager.sharedInstance
@@ -462,15 +462,15 @@ extension PeripheralTableViewController: UITableViewDataSource {
                 peripheralCell.rssiImageView.image = signalImageForRssi(blePeripheral.rssi)
                 
                 // Show either a disconnect button or a disclosure indicator depending on the UISplitViewController displayMode
-                let isFullScreen = UIScreen.mainScreen().traitCollection.horizontalSizeClass == .Compact
+                let isFullScreen = UIScreen.main.traitCollection.horizontalSizeClass == .compact
                 // peripheralCell.accessoryType = isFullScreen ? .DisclosureIndicator : .None
                 
                 let showConnect = isFullScreen || peripheralList.selectedPeripheralRow == nil
                 let showDisconnect = !isFullScreen && row == peripheralList.selectedPeripheralRow
-                peripheralCell.disconnectButton.hidden = !showDisconnect
-                peripheralCell.connectButton.hidden = !showConnect // showDisconnect
+                peripheralCell.disconnectButton.isHidden = !showDisconnect
+                peripheralCell.connectButton.isHidden = !showConnect // showDisconnect
                 peripheralCell.onDisconnect = { [unowned self] in
-                    tableView.deselectRowAtIndexPath(indexPath, animated: true)
+                    tableView.deselectRow(at: indexPath, animated: true)
                     self.peripheralList.selectRow(-1)
                     self.reloadData()
                 }
@@ -483,7 +483,7 @@ extension PeripheralTableViewController: UITableViewDataSource {
                 
                 // Detail Subview
                 let isDetailViewOpen = row == tableRowOpen
-                peripheralCell.baseStackView.subviews[1].hidden = !isDetailViewOpen
+                peripheralCell.baseStackView.subviews[1].isHidden = !isDetailViewOpen
                 if isDetailViewOpen {
                     setupPeripheralExtendedView(peripheralCell, advertisementData: blePeripheral.advertisementData)
                 }
@@ -493,7 +493,7 @@ extension PeripheralTableViewController: UITableViewDataSource {
         return cell
     }
     
-    private func setupPeripheralExtendedView(peripheralCell: PeripheralTableViewCell, advertisementData: [String : AnyObject]) {
+    fileprivate func setupPeripheralExtendedView(_ peripheralCell: PeripheralTableViewCell, advertisementData: [String : AnyObject]) {
         let detailBaseStackView = peripheralCell.detailBaseStackView
         
         var currentIndex = 0
@@ -505,13 +505,13 @@ extension PeripheralTableViewController: UITableViewDataSource {
             peripheralCell.localNameValueLabel.text = localName
             isLocalNameAvailable = true
         }
-        detailBaseStackView.subviews[currentIndex].hidden = !isLocalNameAvailable
+        detailBaseStackView?.subviews[currentIndex].isHidden = !isLocalNameAvailable
         currentIndex = currentIndex+1
 
         
         // Manufacturer Name
         var isManufacturerAvailable = false
-        if let manufacturerData = advertisementData[CBAdvertisementDataManufacturerDataKey] as? NSData, manufacturerString = String(data: manufacturerData, encoding: NSUTF8StringEncoding) {
+        if let manufacturerData = advertisementData[CBAdvertisementDataManufacturerDataKey] as? Data, let manufacturerString = String(data: manufacturerData, encoding: String.Encoding.utf8) {
             
             peripheralCell.manufacturerValueLabel.text = manufacturerString
             isManufacturerAvailable = true
@@ -519,7 +519,7 @@ extension PeripheralTableViewController: UITableViewDataSource {
         else {
             peripheralCell.manufacturerValueLabel.text = nil
         }
-        detailBaseStackView.subviews[currentIndex].hidden = !isManufacturerAvailable
+        detailBaseStackView?.subviews[currentIndex].isHidden = !isManufacturerAvailable
         currentIndex = currentIndex+1
         
         // Services
@@ -528,11 +528,11 @@ extension PeripheralTableViewController: UITableViewDataSource {
             //DLog("services: \(services.count)")
             let stackView = peripheralCell.servicesStackView
     
-            addServiceNames(stackView, services: services)
+            addServiceNames(stackView!, services: services)
             
             areServicesAvailable = services.count > 0
         }
-        detailBaseStackView.subviews[currentIndex].hidden = !areServicesAvailable
+        detailBaseStackView?.subviews[currentIndex].isHidden = !areServicesAvailable
         currentIndex = currentIndex+1
 
         // Services Overflow
@@ -540,11 +540,11 @@ extension PeripheralTableViewController: UITableViewDataSource {
         if let servicesOverflow = advertisementData[CBAdvertisementDataOverflowServiceUUIDsKey] as? [CBUUID] {
             let stackView = peripheralCell.servicesOverflowStackView
 
-            addServiceNames(stackView, services: servicesOverflow)
+            addServiceNames(stackView!, services: servicesOverflow)
             
             areServicesOverflowAvailable = servicesOverflow.count > 0
         }
-        detailBaseStackView.subviews[currentIndex].hidden = !areServicesOverflowAvailable
+        detailBaseStackView?.subviews[currentIndex].isHidden = !areServicesOverflowAvailable
         currentIndex = currentIndex+1
         
         // Solicited Services
@@ -552,24 +552,24 @@ extension PeripheralTableViewController: UITableViewDataSource {
         if let servicesSolicited = advertisementData[CBAdvertisementDataSolicitedServiceUUIDsKey] as? [CBUUID] {
             let stackView = peripheralCell.servicesOverflowStackView
             
-            addServiceNames(stackView, services: servicesSolicited)
+            addServiceNames(stackView!, services: servicesSolicited)
             
             areSolicitedServicesAvailable = servicesSolicited.count > 0
         }
-        detailBaseStackView.subviews[currentIndex].hidden = !areSolicitedServicesAvailable
+        detailBaseStackView?.subviews[currentIndex].isHidden = !areSolicitedServicesAvailable
         currentIndex = currentIndex+1
 
         
         // Tx Power
         var isTxPowerAvailable: Bool
         if let txpower = advertisementData[CBAdvertisementDataTxPowerLevelKey] as? NSNumber {
-            peripheralCell.txPowerLevelValueLabel.text = String(txpower)
+            peripheralCell.txPowerLevelValueLabel.text = String(describing: txpower)
             isTxPowerAvailable = true
         }
         else {
             isTxPowerAvailable = false
         }
-        detailBaseStackView.subviews[currentIndex].hidden = !isTxPowerAvailable
+        detailBaseStackView?.subviews[currentIndex].isHidden = !isTxPowerAvailable
         currentIndex = currentIndex+1
 
         
@@ -583,9 +583,9 @@ extension PeripheralTableViewController: UITableViewDataSource {
 
     }
     
-    private func addServiceNames(stackView: UIStackView, services: [CBUUID]) {
+    fileprivate func addServiceNames(_ stackView: UIStackView, services: [CBUUID]) {
         let styledLabel = stackView.arrangedSubviews.first! as! UILabel
-        styledLabel.hidden = true     // The first view is only to define style in InterfaceBuilder. Hide it
+        styledLabel.isHidden = true     // The first view is only to define style in InterfaceBuilder. Hide it
         
         // Clear current subviews
         for arrangedSubview in stackView.arrangedSubviews {
@@ -598,7 +598,7 @@ extension PeripheralTableViewController: UITableViewDataSource {
         // Add services as subviews
         for serviceCBUUID in services {
             let label = UILabel()
-            var identifier = serviceCBUUID.UUIDString
+            var identifier = serviceCBUUID.uuidString
             if let name = BleUUIDNames.sharedInstance.nameForUUID(identifier) {
                 identifier = name
             }
@@ -614,7 +614,7 @@ extension PeripheralTableViewController: UITableViewDataSource {
 
 // MARK: - UITableViewDelegate
 extension PeripheralTableViewController: UITableViewDelegate {
-    func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         //peripheralList.selectRow(indexPath.row)
         let row = indexPath.row
         let previousTableRowOpen = tableRowOpen
@@ -630,13 +630,13 @@ extension PeripheralTableViewController: UITableViewDelegate {
                 // Reload data
                 var reloadPaths = [indexPath]
                 if let previousTableRowOpen = previousTableRowOpen {
-                    reloadPaths.append(NSIndexPath(forRow: previousTableRowOpen, inSection: indexPath.section))
+                    reloadPaths.append(IndexPath(row: previousTableRowOpen, section: indexPath.section))
                 }
-                self.baseTableView.reloadRowsAtIndexPaths(reloadPaths, withRowAnimation: .None)
+                self.baseTableView.reloadRows(at: reloadPaths, with: .none)
                 
                 // Animate changes
                 self.baseTableView.beginUpdates()
-                tableView.deselectRowAtIndexPath(indexPath, animated: false)
+                tableView.deselectRow(at: indexPath, animated: false)
                 self.baseTableView.endUpdates()
             }
             else {
@@ -649,17 +649,17 @@ extension PeripheralTableViewController: UITableViewDelegate {
 // MARK: - UIPopoverPresentationControllerDelegate
 extension PeripheralTableViewController: UIPopoverPresentationControllerDelegate {
     
-    func adaptivePresentationStyleForPresentationController(PC: UIPresentationController) -> UIModalPresentationStyle {
+    func adaptivePresentationStyle(for PC: UIPresentationController) -> UIModalPresentationStyle {
         // This *forces* a popover to be displayed on the iPhone
-        if traitCollection.verticalSizeClass != .Compact {
-            return .None
+        if traitCollection.verticalSizeClass != .compact {
+            return .none
         }
         else {
-            return .FullScreen
+            return .fullScreen
         }
     }
     
-    func popoverPresentationControllerDidDismissPopover(popoverPresentationController: UIPopoverPresentationController) {
+    func popoverPresentationControllerDidDismissPopover(_ popoverPresentationController: UIPopoverPresentationController) {
         DLog("selector dismissed")
     }
 }

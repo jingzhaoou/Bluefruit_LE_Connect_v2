@@ -9,10 +9,10 @@
 import Cocoa
 
 protocol PinTableCellViewDelegate: class {
-    func onPinToggleCell(pinIndex: Int)
-    func onPinModeChanged(mode: PinIOModuleManager.PinData.Mode, pinIndex: Int)
-    func onPinDigitalValueChanged(value: PinIOModuleManager.PinData.DigitalValue, pinIndex: Int)
-    func onPinAnalogValueChanged(value: Double, pinIndex: Int)
+    func onPinToggleCell(_ pinIndex: Int)
+    func onPinModeChanged(_ mode: PinIOModuleManager.PinData.Mode, pinIndex: Int)
+    func onPinDigitalValueChanged(_ value: PinIOModuleManager.PinData.DigitalValue, pinIndex: Int)
+    func onPinAnalogValueChanged(_ value: Double, pinIndex: Int)
 }
 
 
@@ -28,17 +28,17 @@ class PinTableCellView: NSTableCellView {
     
     // Data
     weak var delegate: PinTableCellViewDelegate?
-    private var modesInSegmentedControl : [PinIOModuleManager.PinData.Mode] = []
-    private var pinIndex: Int = 0
+    fileprivate var modesInSegmentedControl : [PinIOModuleManager.PinData.Mode] = []
+    fileprivate var pinIndex: Int = 0
     
-    override func drawRect(dirtyRect: NSRect) {
-        super.drawRect(dirtyRect)
+    override func draw(_ dirtyRect: NSRect) {
+        super.draw(dirtyRect)
 
         // Drawing code here.
     }
     
     // MARK: - Setup
-    func setPin(pin : PinIOModuleManager.PinData, pinIndex: Int) {
+    func setPin(_ pin : PinIOModuleManager.PinData, pinIndex: Int) {
         self.pinIndex = pinIndex
         setupModeSegmentedControl(pin)
         digitalSegmentedControl.selectedSegment = pin.digitalValue.rawValue
@@ -56,13 +56,13 @@ class PinTableCellView: NSTableCellView {
         
         var valueText: String!
         switch pin.mode {
-        case .Input:
+        case .input:
             valueText = PinIOModuleManager.stringForPinDigitalValue(pin.digitalValue)
-        case .Output:
+        case .output:
             valueText = PinIOModuleManager.stringForPinDigitalValue(pin.digitalValue)
-        case .Analog:
+        case .analog:
             valueText = String(pin.analogValue)
-        case .PWM:
+        case .pwm:
             valueText = String(pin.analogValue)
             
         default:
@@ -70,21 +70,21 @@ class PinTableCellView: NSTableCellView {
         }
         valueLabel.stringValue = valueText
         
-        valueSlider.hidden = pin.mode != .PWM
-        digitalSegmentedControl.hidden = pin.mode != .Output
+        valueSlider.isHidden = pin.mode != .pwm
+        digitalSegmentedControl.isHidden = pin.mode != .output
     }
 
-    private func setupModeSegmentedControl(pin : PinIOModuleManager.PinData) {
+    fileprivate func setupModeSegmentedControl(_ pin : PinIOModuleManager.PinData) {
         modesInSegmentedControl.removeAll()
         if pin.isDigital == true {
-            modesInSegmentedControl.append(.Input)
-            modesInSegmentedControl.append(.Output)
+            modesInSegmentedControl.append(.input)
+            modesInSegmentedControl.append(.output)
         }
         if pin.isAnalog {
-            modesInSegmentedControl.append(.Analog)
+            modesInSegmentedControl.append(.analog)
         }
         if pin.isPWM {
-            modesInSegmentedControl.append(.PWM)
+            modesInSegmentedControl.append(.pwm)
         }
         
         modeSegmentedControl.segmentCount = modesInSegmentedControl.count
@@ -103,15 +103,15 @@ class PinTableCellView: NSTableCellView {
 
     // MARK: - Actions
     
-    @IBAction func onClickToggleCell(sender: AnyObject) {
+    @IBAction func onClickToggleCell(_ sender: AnyObject) {
         delegate?.onPinToggleCell(pinIndex)
     }
     
-    @IBAction func onModeChanged(sender: AnyObject) {
+    @IBAction func onModeChanged(_ sender: AnyObject) {
         delegate?.onPinModeChanged(modesInSegmentedControl[modeSegmentedControl.selectedSegment], pinIndex: pinIndex)
     }
     
-    @IBAction func onDigitalChanged(sender: AnyObject) {
+    @IBAction func onDigitalChanged(_ sender: AnyObject) {
         if let selectedDigital = PinIOModuleManager.PinData.DigitalValue(rawValue: digitalSegmentedControl.selectedSegment) {
             delegate?.onPinDigitalValueChanged(selectedDigital, pinIndex: pinIndex)
         }
@@ -120,7 +120,7 @@ class PinTableCellView: NSTableCellView {
         }
     }
     
-    @IBAction func onValueSliderChanged(sender: AnyObject) {
+    @IBAction func onValueSliderChanged(_ sender: AnyObject) {
         delegate?.onPinAnalogValueChanged(valueSlider.doubleValue, pinIndex: pinIndex)
     }
 

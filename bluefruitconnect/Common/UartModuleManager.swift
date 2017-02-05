@@ -9,16 +9,16 @@
 import Foundation
 
 protocol UartModuleDelegate: class {
-    func addChunkToUI(dataChunk: UartDataChunk)
+    func addChunkToUI(_ dataChunk: UartDataChunk)
     func mqttUpdateStatusUI()
-    func mqttError(message: String, isConnectionError: Bool)
+    func mqttError(_ message: String, isConnectionError: Bool)
 }
 
 // Wrapper around UartManager to implenent an UartModule
 class UartModuleManager: NSObject {
     enum DisplayMode {
-        case Text           // Display a TextView with all uart data as a String
-        case Table          // Display a table where each data chunk is a row
+        case text           // Display a TextView with all uart data as a String
+        case table          // Display a table where each data chunk is a row
     }
     
     enum ExportFormat: String {
@@ -65,66 +65,66 @@ class UartModuleManager: NSObject {
     override init() {
         super.init()
         
-        let notificationCenter =  NSNotificationCenter.defaultCenter()
-        notificationCenter.addObserver(self, selector: #selector(didReceiveData(_:)), name: UartManager.UartNotifications.DidReceiveData.rawValue, object: nil)
+        let notificationCenter =  NotificationCenter.default
+        notificationCenter.addObserver(self, selector: #selector(didReceiveData(_:)), name: NSNotification.Name(rawValue: UartManager.UartNotifications.DidReceiveData.rawValue), object: nil)
     }
     
     deinit {
-        let notificationCenter =  NSNotificationCenter.defaultCenter()
-        notificationCenter.removeObserver(self, name: UartManager.UartNotifications.DidReceiveData.rawValue, object: nil)
+        let notificationCenter =  NotificationCenter.default
+        notificationCenter.removeObserver(self, name: NSNotification.Name(rawValue: UartManager.UartNotifications.DidReceiveData.rawValue), object: nil)
     }
     
     // MARK: - Uart
-    func sendMessageToUart(text: String) {
+    func sendMessageToUart(_ text: String) {
         sendMessageToUart(text, wasReceivedFromMqtt: false)
     }
     
-    func sendMessageToUart(text: String, wasReceivedFromMqtt: Bool) {
+    func sendMessageToUart(_ text: String, wasReceivedFromMqtt: Bool) {
         
         // Mqtt publish to TX
         let mqttSettings = MqttSettings.sharedInstance
         if(mqttSettings.isPublishEnabled) {
-            if let topic = mqttSettings.getPublishTopic(MqttSettings.PublishFeed.TX.rawValue) {
-                let qos = mqttSettings.getPublishQos(MqttSettings.PublishFeed.TX.rawValue)
+            if let topic = mqttSettings.getPublishTopic(MqttSettings.PublishFeed.tx.rawValue) {
+                let qos = mqttSettings.getPublishQos(MqttSettings.PublishFeed.tx.rawValue)
                 MqttManager.sharedInstance.publish(text, topic: topic, qos: qos)
             }
         }
         
         // Create data and send to Uart
-        if let data = text.dataUsingEncoding(NSUTF8StringEncoding) {
-            let dataChunk = UartDataChunk(timestamp: CFAbsoluteTimeGetCurrent(), mode: .TX, data: data)
+        if let data = text.data(using: String.Encoding.utf8) {
+            let dataChunk = UartDataChunk(timestamp: CFAbsoluteTimeGetCurrent(), mode: .tx, data: data)
             
-            dispatch_async(dispatch_get_main_queue(), {[unowned self] in
+            DispatchQueue.main.async(execute: {[unowned self] in
                 self.delegate?.addChunkToUI(dataChunk)
                 })
             
-            if (!wasReceivedFromMqtt || mqttSettings.subscribeBehaviour == .Transmit) {
+            if (!wasReceivedFromMqtt || mqttSettings.subscribeBehaviour == .transmit) {
                 UartManager.sharedInstance.sendChunk(dataChunk)
             }
         }
     }
     
-    func didReceiveData(notification: NSNotification) {
+    func didReceiveData(_ notification: Notification) {
         if let dataChunk = notification.userInfo?["dataChunk"] as? UartDataChunk {
             receivedChunk(dataChunk)
         }
     }
     
-    private func receivedChunk(dataChunk: UartDataChunk) {
+    fileprivate func receivedChunk(_ dataChunk: UartDataChunk) {
         
         // Mqtt publish to RX
         let mqttSettings = MqttSettings.sharedInstance
         if mqttSettings.isPublishEnabled {
-            if let message = NSString(data: dataChunk.data, encoding: NSUTF8StringEncoding) {
-                if let topic = mqttSettings.getPublishTopic(MqttSettings.PublishFeed.RX.rawValue) {
-                    let qos = mqttSettings.getPublishQos(MqttSettings.PublishFeed.RX.rawValue)
+            if let message = NSString(data: dataChunk.data as Data, encoding: String.Encoding.utf8.rawValue) {
+                if let topic = mqttSettings.getPublishTopic(MqttSettings.PublishFeed.rx.rawValue) {
+                    let qos = mqttSettings.getPublishQos(MqttSettings.PublishFeed.rx.rawValue)
                     MqttManager.sharedInstance.publish(message as String, topic: topic, qos: qos)
                 }
             }
         }
 
         // Add to UI
-        dispatch_async(dispatch_get_main_queue(), {[unowned self] in
+        DispatchQueue.main.async(execute: {[unowned self] in
             self.delegate?.addChunkToUI(dataChunk)
             })
         
@@ -140,7 +140,7 @@ class UartModuleManager: NSObject {
     }
     
     // MARK: - UI Utils
-    static func attributeTextFromData(data: NSData, useHexMode: Bool, color: Color, font: Font) -> NSAttributedString? {
+    static func attributeTextFromData(_ data: Data, useHexMode: Bool, color: Color, font: Font) -> NSAttributedString? {
         var attributedString : NSAttributedString?
         
         let textAttributes: [String:AnyObject] = [NSFontAttributeName: font, NSForegroundColorAttributeName: color]
@@ -150,7 +150,7 @@ class UartModuleManager: NSObject {
             attributedString = NSAttributedString(string: hexValue, attributes: textAttributes)
         }
         else {
-            if let value = NSString(data:data, encoding: NSASCIIStringEncoding) as String? {
+            if let value = NSString(data:data, encoding: String.Encoding.ascii.rawValue) as String? {
                 
                 var representableValue: String
                 
@@ -159,7 +159,7 @@ class UartModuleManager: NSObject {
                     for scalar in value.unicodeScalars {
                         let isRepresentable = scalar.value>=32 && scalar.value<127
                         //DLog("\(scalar.value). isVis: \( isRepresentable ? "true":"false" )")
-                        representableValue.append(isRepresentable ? scalar:UnicodeScalar("�"))
+                        representableValue.append(String(describing: isRepresentable ? scalar:UnicodeScalar("�")))
                     }
                 }
                 else {
@@ -178,51 +178,51 @@ class UartModuleManager: NSObject {
 extension UartModuleManager: CBPeripheralDelegate {
     // Pass peripheral callbacks to UartData
     
-    func peripheral(peripheral: CBPeripheral, didModifyServices invalidatedServices: [CBService]) {
+    func peripheral(_ peripheral: CBPeripheral, didModifyServices invalidatedServices: [CBService]) {
         UartManager.sharedInstance.peripheral(peripheral, didModifyServices: invalidatedServices)
     }
     
-    func peripheral(peripheral: CBPeripheral, didDiscoverServices error: NSError?) {
+    func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         UartManager.sharedInstance.peripheral(peripheral, didDiscoverServices:error)
     }
     
-    func peripheral(peripheral: CBPeripheral, didDiscoverCharacteristicsForService service: CBService, error: NSError?) {
+    func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
         
-        UartManager.sharedInstance.peripheral(peripheral, didDiscoverCharacteristicsForService: service, error: error)
+        UartManager.sharedInstance.peripheral(peripheral, didDiscoverCharacteristicsFor: service, error: error)
     }
     
-    func peripheral(peripheral: CBPeripheral, didUpdateValueForCharacteristic characteristic: CBCharacteristic, error: NSError?) {
-        UartManager.sharedInstance.peripheral(peripheral, didUpdateValueForCharacteristic: characteristic, error: error)
+    func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
+        UartManager.sharedInstance.peripheral(peripheral, didUpdateValueFor: characteristic, error: error)
     }
 }
 
 // MARK: - MqttManagerDelegate
 extension UartModuleManager: MqttManagerDelegate {
     func onMqttConnected() {
-        dispatch_async(dispatch_get_main_queue(), { [unowned self] in
+        DispatchQueue.main.async(execute: { [unowned self] in
             self.delegate?.mqttUpdateStatusUI()
             })
     }
     
     func onMqttDisconnected() {
-        dispatch_async(dispatch_get_main_queue(), { [unowned self] in
+        DispatchQueue.main.async(execute: { [unowned self] in
             self.delegate?.mqttUpdateStatusUI()
             })
         
     }
     
-    func onMqttMessageReceived(message: String, topic: String) {
-        dispatch_async(dispatch_get_main_queue(), { [unowned self] in
+    func onMqttMessageReceived(_ message: String, topic: String) {
+        DispatchQueue.main.async(execute: { [unowned self] in
             self.sendMessageToUart(message, wasReceivedFromMqtt: true)
             })
     }
     
-    func onMqttError(message: String) {
+    func onMqttError(_ message: String) {
         let mqttManager = MqttManager.sharedInstance
         let status = mqttManager.status
-        let isConnectionError = status == .Connecting
+        let isConnectionError = status == .connecting
         
-        dispatch_async(dispatch_get_main_queue(), { [unowned self] in
+        DispatchQueue.main.async(execute: { [unowned self] in
             self.delegate?.mqttError(message, isConnectionError: isConnectionError)
             })
     }

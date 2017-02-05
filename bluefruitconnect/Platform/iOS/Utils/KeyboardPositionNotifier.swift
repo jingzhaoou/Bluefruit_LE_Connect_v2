@@ -9,7 +9,7 @@
 import UIKit
 
 protocol KeyboardPositionNotifierDelegate: class {
-    func onKeyboardPositionChanged(keyboardFrame : CGRect, keyboardShown : Bool)
+    func onKeyboardPositionChanged(_ keyboardFrame : CGRect, keyboardShown : Bool)
 }
 
 class KeyboardPositionNotifier: NSObject {
@@ -25,29 +25,29 @@ class KeyboardPositionNotifier: NSObject {
         registerKeyboardNotifications(false)
     }
     
-    func registerKeyboardNotifications(enable : Bool) {
-        let notificationCenter = NSNotificationCenter.defaultCenter()
+    func registerKeyboardNotifications(_ enable : Bool) {
+        let notificationCenter = NotificationCenter.default
         if (enable) {
-            notificationCenter.addObserver(self, selector: #selector(KeyboardPositionNotifier.keyboardWillBeShown(_:)), name: UIKeyboardWillShowNotification, object: nil)
-            notificationCenter.addObserver(self, selector: #selector(KeyboardPositionNotifier.keyboardWillBeHidden(_:)), name: UIKeyboardWillHideNotification, object: nil)
+            notificationCenter.addObserver(self, selector: #selector(KeyboardPositionNotifier.keyboardWillBeShown(_:)), name: NSNotification.Name.UIKeyboardWillShow, object: nil)
+            notificationCenter.addObserver(self, selector: #selector(KeyboardPositionNotifier.keyboardWillBeHidden(_:)), name: NSNotification.Name.UIKeyboardWillHide, object: nil)
         } else {
-            notificationCenter.removeObserver(self, name: UIKeyboardWillShowNotification, object: nil)
-            notificationCenter.removeObserver(self, name: UIKeyboardWillHideNotification, object: nil)
+            notificationCenter.removeObserver(self, name: NSNotification.Name.UIKeyboardWillShow, object: nil)
+            notificationCenter.removeObserver(self, name: NSNotification.Name.UIKeyboardWillHide, object: nil)
         }
     }
     
-    func keyboardWillBeShown(notification : NSNotification) {
+    func keyboardWillBeShown(_ notification : Notification) {
         var info = notification.userInfo!
-        let keyboardFrame: CGRect = (info[UIKeyboardFrameEndUserInfoKey] as! NSValue).CGRectValue()
+        let keyboardFrame: CGRect = (info[UIKeyboardFrameEndUserInfoKey] as! NSValue).cgRectValue
        
         keyboardPositionChanged(keyboardFrame, keyboardShown: true)
     }
     
-    func keyboardWillBeHidden(notification : NSNotification) {
-       keyboardPositionChanged(CGRectZero, keyboardShown: false)
+    func keyboardWillBeHidden(_ notification : Notification) {
+       keyboardPositionChanged(CGRect.zero, keyboardShown: false)
     }
     
-    func keyboardPositionChanged(keyboardFrame : CGRect, keyboardShown : Bool) {
+    func keyboardPositionChanged(_ keyboardFrame : CGRect, keyboardShown : Bool) {
         delegate?.onKeyboardPositionChanged(keyboardFrame, keyboardShown: keyboardShown)
     }
 }

@@ -28,26 +28,26 @@ class PeripheralTableCellView: NSTableCellView {
         
         hasUartView.wantsLayer = true
         hasUartView.layer?.borderWidth = 1
-        hasUartView.layer?.borderColor = NSColor.lightGrayColor().CGColor
+        hasUartView.layer?.borderColor = NSColor.lightGray.cgColor
         hasUartView.layer?.cornerRadius = 4
     }
     
-    override func drawRect(dirtyRect: NSRect) {
-        super.drawRect(dirtyRect)
+    override func draw(_ dirtyRect: NSRect) {
+        super.draw(dirtyRect)
 
         // Drawing code here.
     }
 
-    func showDisconnectButton(show: Bool) {
+    func showDisconnectButton(_ show: Bool) {
         disconnectButtonWidthConstraint.constant = show ? 24: 0
     }
     
     // MARK: - Actions
-    @IBAction func onClickDisconnect(sender: AnyObject) {
+    @IBAction func onClickDisconnect(_ sender: AnyObject) {
         onDisconnect?()
     }
 
-    @IBAction func onClickAdvertisingPacket(sender: AnyObject) {
+    @IBAction func onClickAdvertisingPacket(_ sender: AnyObject) {
         onClickAdvertising?()
     }
     

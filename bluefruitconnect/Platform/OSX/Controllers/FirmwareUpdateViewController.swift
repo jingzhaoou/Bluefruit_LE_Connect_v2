@@ -19,16 +19,16 @@ class FirmwareUpdateViewController: NSViewController {
     @IBOutlet weak var iniFileTextField: NSTextField!
     
     // Data
-    private let firmwareUpdater = FirmwareUpdater()
-    private let dfuUpdateProcess = DfuUpdateProcess()
-    private var updateDialogViewController: UpdateDialogViewController?
+    fileprivate let firmwareUpdater = FirmwareUpdater()
+    fileprivate let dfuUpdateProcess = DfuUpdateProcess()
+    fileprivate var updateDialogViewController: UpdateDialogViewController?
     
-    private var boardRelease: BoardInfo?
-    private var deviceInfoData: DeviceInfoData?
-    private var allReleases: [NSObject: AnyObject]?
+    fileprivate var boardRelease: BoardInfo?
+    fileprivate var deviceInfoData: DeviceInfoData?
+    fileprivate var allReleases: [AnyHashable: Any]?
     
-    private var isTabVisible = false
-    private var isCheckingUpdates = false
+    fileprivate var isTabVisible = false
+    fileprivate var isCheckingUpdates = false
     
     var infoFinishedScanning = false {
         didSet {
@@ -67,43 +67,43 @@ class FirmwareUpdateViewController: NSViewController {
         if !isCheckingUpdates {
             if let blePeripheral = BleManager.sharedInstance.blePeripheralConnected {
                 isCheckingUpdates = true
-                let releases = FirmwareUpdater.releasesWithBetaVersions(Preferences.showBetaVersions)
-                firmwareUpdater.checkUpdatesForPeripheral(blePeripheral.peripheral, delegate: self, shouldDiscoverServices: false, releases: releases, shouldRecommendBetaReleases: false)
+                let releases = FirmwareUpdater.releases(withBetaVersions: Preferences.showBetaVersions)
+                firmwareUpdater.checkUpdates(for: blePeripheral.peripheral, delegate: self, shouldDiscoverServices: false, releases: releases, shouldRecommendBetaReleases: false)
             }
         }
     }
 
     // MARK: - Preferences
-    func registerNotifications(register : Bool) {
+    func registerNotifications(_ register : Bool) {
         
-        let notificationCenter =  NSNotificationCenter.defaultCenter()
+        let notificationCenter =  NotificationCenter.default
         if (register) {
-            notificationCenter.addObserver(self, selector: #selector(FirmwareUpdateViewController.preferencesUpdated(_:)), name: Preferences.PreferencesNotifications.DidUpdatePreferences.rawValue, object: nil)
+            notificationCenter.addObserver(self, selector: #selector(FirmwareUpdateViewController.preferencesUpdated(_:)), name: NSNotification.Name(rawValue: Preferences.PreferencesNotifications.DidUpdatePreferences.rawValue), object: nil)
         }
         else {
-            notificationCenter.removeObserver(self, name: Preferences.PreferencesNotifications.DidUpdatePreferences.rawValue, object: nil)
+            notificationCenter.removeObserver(self, name: NSNotification.Name(rawValue: Preferences.PreferencesNotifications.DidUpdatePreferences.rawValue), object: nil)
         }
     }
 
-    func preferencesUpdated(notification : NSNotification) {
+    func preferencesUpdated(_ notification : Notification) {
         // Reload updates
         if let blePeripheral = BleManager.sharedInstance.blePeripheralConnected {
-            let releases = FirmwareUpdater.releasesWithBetaVersions(Preferences.showBetaVersions)
-            firmwareUpdater.checkUpdatesForPeripheral(blePeripheral.peripheral, delegate: self, shouldDiscoverServices: false, releases: releases, shouldRecommendBetaReleases: false)
+            let releases = FirmwareUpdater.releases(withBetaVersions: Preferences.showBetaVersions)
+            firmwareUpdater.checkUpdates(for: blePeripheral.peripheral, delegate: self, shouldDiscoverServices: false, releases: releases, shouldRecommendBetaReleases: false)
         }
     }
 
     // MARK: - 
     
-    @IBAction func onClickChooseInitFile(sender: AnyObject) {
+    @IBAction func onClickChooseInitFile(_ sender: AnyObject) {
         chooseFile(false)
     }
     
-    @IBAction func onClickChooseHexFile(sender: AnyObject) {
+    @IBAction func onClickChooseHexFile(_ sender: AnyObject) {
         chooseFile(true)
     }
     
-    func chooseFile(isHexFile : Bool) {
+    func chooseFile(_ isHexFile : Bool) {
         let openFileDialog = NSOpenPanel()
         openFileDialog.canChooseFiles = true
         openFileDialog.canChooseDirectories = false
@@ -111,15 +111,15 @@ class FirmwareUpdateViewController: NSViewController {
         openFileDialog.canCreateDirectories = false
         
         if let window = self.view.window {
-            openFileDialog.beginSheetModalForWindow(window) {[unowned self] (result) -> Void in
+            openFileDialog.beginSheetModal(for: window) {[unowned self] (result) -> Void in
                 if result == NSFileHandlingPanelOKButton {
-                    if let url = openFileDialog.URL {
+                    if let url = openFileDialog.url {
                         
                         if (isHexFile) {
-                            self.hexFileTextField.stringValue = url.path!
+                            self.hexFileTextField.stringValue = url.path
                         }
                         else {
-                            self.iniFileTextField.stringValue = url.path!
+                            self.iniFileTextField.stringValue = url.path
                         }
                     }
                 }
@@ -127,7 +127,7 @@ class FirmwareUpdateViewController: NSViewController {
         }
     }
     
-    @IBAction func onClickCustomFirmwareUpdate(sender: AnyObject) {
+    @IBAction func onClickCustomFirmwareUpdate(_ sender: AnyObject) {
         guard deviceInfoData != nil else {
             DLog("deviceInfoData is nil");
             return
@@ -143,27 +143,27 @@ class FirmwareUpdateViewController: NSViewController {
             return
         }
         
-        let hexUrl = NSURL(fileURLWithPath: hexFileTextField.stringValue)
-        var iniUrl :NSURL? = nil
+        let hexUrl = URL(fileURLWithPath: hexFileTextField.stringValue)
+        var iniUrl :URL? = nil
         
         if !iniFileTextField.stringValue.isEmpty {
-            iniUrl = NSURL(fileURLWithPath: iniFileTextField.stringValue)
+            iniUrl = URL(fileURLWithPath: iniFileTextField.stringValue)
         }
         
         startDfuUpdateWithHexInitFiles(hexUrl, iniUrl: iniUrl)
     }
        
     // MARK: - DFU update
-    func confirmDfuUpdateWithFirmware(firmwareInfo : FirmwareInfo) {
+    func confirmDfuUpdateWithFirmware(_ firmwareInfo : FirmwareInfo) {
         let compareBootloader = deviceInfoData!.bootloaderVersion().caseInsensitiveCompare(firmwareInfo.minBootloaderVersion)
-        if (compareBootloader == .OrderedDescending || compareBootloader == .OrderedSame) {        // Requeriments met
+        if (compareBootloader == .orderedDescending || compareBootloader == .orderedSame) {        // Requeriments met
             let alert = NSAlert()
             alert.messageText = "Install firmware version \(firmwareInfo.version)?"
             alert.informativeText = "The firmware will be downloaded and updated. Please wait until the process finishes before disconnecting the peripheral"
-            alert.addButtonWithTitle("Ok")
-            alert.addButtonWithTitle("Cancel")
-            alert.alertStyle = .Warning
-            alert.beginSheetModalForWindow(self.view.window!, completionHandler: { [unowned self](modalResponse) -> Void in
+            alert.addButton(withTitle: "Ok")
+            alert.addButton(withTitle: "Cancel")
+            alert.alertStyle = .warning
+            alert.beginSheetModal(for: self.view.window!, completionHandler: { [unowned self](modalResponse) -> Void in
                 if (modalResponse == NSAlertFirstButtonReturn) {
                     self.startDfuUpdateWithFirmware(firmwareInfo)
                 }
@@ -172,19 +172,19 @@ class FirmwareUpdateViewController: NSViewController {
         else {      // Requeriments not met
             let alert = NSAlert()
             alert.messageText = "This firmware update is not compatible with your bootloader. You need to update your bootloader to version %@ before installing this firmware release \(firmwareInfo.version)"
-            alert.addButtonWithTitle("Ok")
-            alert.alertStyle = .Warning
-            alert.beginSheetModalForWindow(self.view.window!, completionHandler: nil)
+            alert.addButton(withTitle: "Ok")
+            alert.alertStyle = .warning
+            alert.beginSheetModal(for: self.view.window!, completionHandler: nil)
         }
     }
     
-    func startDfuUpdateWithFirmware(firmwareInfo : FirmwareInfo) {
-        let hexUrl = NSURL(string: firmwareInfo.hexFileUrl)!
-        let iniUrl =  NSURL(string: firmwareInfo.iniFileUrl)
+    func startDfuUpdateWithFirmware(_ firmwareInfo : FirmwareInfo) {
+        let hexUrl = URL(string: firmwareInfo.hexFileUrl)!
+        let iniUrl =  URL(string: firmwareInfo.iniFileUrl)
         startDfuUpdateWithHexInitFiles(hexUrl, iniUrl: iniUrl)
     }
     
-    func startDfuUpdateWithHexInitFiles(hexUrl : NSURL, iniUrl: NSURL?) {
+    func startDfuUpdateWithHexInitFiles(_ hexUrl : URL, iniUrl: URL?) {
         if let blePeripheral = BleManager.sharedInstance.blePeripheralConnected {
      
             // Setup update process
@@ -192,7 +192,7 @@ class FirmwareUpdateViewController: NSViewController {
             dfuUpdateProcess.delegate = self
 
             // Show dialog
-            updateDialogViewController = (self.storyboard?.instantiateControllerWithIdentifier("UpdateDialogViewController") as! UpdateDialogViewController)
+            updateDialogViewController = (self.storyboard?.instantiateController(withIdentifier: "UpdateDialogViewController") as! UpdateDialogViewController)
             updateDialogViewController!.delegate = self
             self.presentViewControllerAsModalWindow(updateDialogViewController!)
         }
@@ -224,7 +224,7 @@ extension FirmwareUpdateViewController : DetailTab {
 
 // MARK: - FirmwareUpdaterDelegate
 extension FirmwareUpdateViewController : FirmwareUpdaterDelegate {
-    func onFirmwareUpdatesAvailable(isUpdateAvailable: Bool, latestRelease: FirmwareInfo!, deviceInfoData: DeviceInfoData?, allReleases: [NSObject : AnyObject]?) {
+    func onFirmwareUpdatesAvailable(_ isUpdateAvailable: Bool, latestRelease: FirmwareInfo!, deviceInfoData: DeviceInfoData?, allReleases: [AnyHashable: Any]?) {
         DLog("onFirmwareUpdatesAvailable")
         
         self.deviceInfoData = deviceInfoData
@@ -245,7 +245,7 @@ extension FirmwareUpdateViewController : FirmwareUpdaterDelegate {
         
         // Update UI
         
-        dispatch_async(dispatch_get_main_queue(),{ [unowned self] in
+        DispatchQueue.main.async(execute: { [unowned self] in
             self.firmwareWaitView.stopAnimation(nil)
             self.firmwareTableView.reloadData()
             
@@ -270,7 +270,7 @@ extension FirmwareUpdateViewController : FirmwareUpdaterDelegate {
 
 // MARK: - NSTableViewDataSource
 extension FirmwareUpdateViewController : NSTableViewDataSource {
-    func numberOfRowsInTableView(tableView: NSTableView) -> Int {
+    func numberOfRows(in tableView: NSTableView) -> Int {
         if let firmwareReleases = boardRelease?.firmwareReleases {
             return firmwareReleases.count
         }
@@ -290,7 +290,7 @@ extension FirmwareUpdateViewController : NSTableViewDataSource {
 
 // MARK: NSTableViewDelegate
 extension FirmwareUpdateViewController : NSTableViewDelegate {
-    func tableView(tableView: NSTableView, viewForTableColumn tableColumn: NSTableColumn?, row: Int) -> NSView? {
+    func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
 
         let firmwareInfo = firmwareInfoForRow(row)
         
@@ -299,7 +299,7 @@ extension FirmwareUpdateViewController : NSTableViewDelegate {
         if let columnIdentifier = tableColumn?.identifier {
             switch columnIdentifier {
             case "VersionColumn":
-                cell = tableView.makeViewWithIdentifier("FirmwareVersionCell", owner: self) as! NSTableCellView
+                cell = tableView.make(withIdentifier: "FirmwareVersionCell", owner: self) as! NSTableCellView
                 
                 var text = firmwareInfo.version
                 if text == nil {
@@ -308,10 +308,10 @@ extension FirmwareUpdateViewController : NSTableViewDelegate {
                 if firmwareInfo.isBeta {
                     text! += " Beta"
                 }
-                cell.textField?.stringValue = text
+                cell.textField?.stringValue = text!
                 
             case "TypeColumn":
-                cell = tableView.makeViewWithIdentifier("FirmwareTypeCell", owner: self) as! NSTableCellView
+                cell = tableView.make(withIdentifier: "FirmwareTypeCell", owner: self) as! NSTableCellView
                 
                 cell.textField?.stringValue = firmwareInfo.boardName
                 
@@ -323,7 +323,7 @@ extension FirmwareUpdateViewController : NSTableViewDelegate {
         return cell;
     }
 
-    func tableViewSelectionDidChange(notification: NSNotification) {
+    func tableViewSelectionDidChange(_ notification: Notification) {
         
         let selectedRow = firmwareTableView.selectedRow
         if selectedRow >= 0 {
@@ -340,7 +340,7 @@ extension FirmwareUpdateViewController : NSTableViewDelegate {
         
     }
     
-    private func firmwareInfoForRow(row: Int) -> FirmwareInfo {
+    fileprivate func firmwareInfoForRow(_ row: Int) -> FirmwareInfo {
         var firmwareInfo: FirmwareInfo!
         
         if let firmwareReleases: NSArray = boardRelease?.firmwareReleases {     // If showing releases for a specific board
@@ -352,15 +352,15 @@ extension FirmwareUpdateViewController : NSTableViewDelegate {
             var currentBoardIndex = 0
             while currentRow <= row {
                 
-                let sortedKeys = allReleases!.keys.sort({($0 as! String) < ($1 as! String)})        // Order alphabetically
+                let sortedKeys = allReleases!.keys.sorted(by: {($0 as! String) < ($1 as! String)})        // Order alphabetically
                 let currentKey = sortedKeys[currentBoardIndex]
                 let boardRelease = allReleases![currentKey] as! BoardInfo
                 
                         // order versions numerically
-                let firmwareReleases = boardRelease.firmwareReleases.sort({ (firmwareA, firmwareB) -> Bool in
+                let firmwareReleases = boardRelease.firmwareReleases.sorted(by: { (firmwareA, firmwareB) -> Bool in
                     let versionA = (firmwareA as! FirmwareInfo).version
                     let versionB = (firmwareB as! FirmwareInfo).version
-                    return versionA.compare(versionB, options: .NumericSearch) == .OrderedAscending
+                    return versionA!.compare(versionB!, options: .numeric) == .orderedAscending
                 })
                     
                 let numReleases = firmwareReleases.count
@@ -410,16 +410,16 @@ extension FirmwareUpdateViewController : DfuUpdateProcessDelegate {
         if let window = self.view.window {
             let alert = NSAlert()
             alert.messageText = "Update completed successfully"
-            alert.addButtonWithTitle("Ok")
-            alert.alertStyle = .Warning
-            alert.beginSheetModalForWindow(window, completionHandler: nil)
+            alert.addButton(withTitle: "Ok")
+            alert.alertStyle = .warning
+            alert.beginSheetModal(for: window, completionHandler: nil)
         }
         else {
             DLog("onUpdateDialogSuccess: window not defined")
         }
     }
     
-    func onUpdateProcessError(errorMessage : String, infoMessage: String?) {
+    func onUpdateProcessError(_ errorMessage : String, infoMessage: String?) {
         BleManager.sharedInstance.restoreCentralManager()
         
         if let updateDialogViewController = updateDialogViewController {
@@ -433,20 +433,20 @@ extension FirmwareUpdateViewController : DfuUpdateProcessDelegate {
             if let infoMessage = infoMessage {
                 alert.informativeText = infoMessage
             }
-            alert.addButtonWithTitle("Ok")
-            alert.alertStyle = .Warning
-            alert.beginSheetModalForWindow(window, completionHandler: nil)
+            alert.addButton(withTitle: "Ok")
+            alert.alertStyle = .warning
+            alert.beginSheetModal(for: window, completionHandler: nil)
         }
         else {
             DLog("onUpdateDialogError: window not defined when showing dialog with message: \(errorMessage)")
         }
     }
     
-    func onUpdateProgressText(message: String) {
+    func onUpdateProgressText(_ message: String) {
         updateDialogViewController?.setProgressText(message)
     }
     
-    func onUpdateProgressValue(progress : Double) {
+    func onUpdateProgressValue(_ progress : Double) {
         updateDialogViewController?.setProgress(progress)
     }
 }
@@ -455,7 +455,7 @@ extension FirmwareUpdateViewController : DfuUpdateProcessDelegate {
 extension FirmwareUpdateViewController: CBPeripheralDelegate {
     // Pass peripheral callbacks to UartData
     
-    func peripheral(peripheral: CBPeripheral, didModifyServices invalidatedServices: [CBService]) {
+    func peripheral(_ peripheral: CBPeripheral, didModifyServices invalidatedServices: [CBService]) {
         DLog("FirmwareUpdateViewController didModifyServices")
         
         if infoFinishedScanning {

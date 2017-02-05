@@ -17,7 +17,7 @@ class AboutViewController: UIViewController {
         super.viewDidLoad()
         
         // Get version
-        if let shortVersion = NSBundle.mainBundle().infoDictionary!["CFBundleShortVersionString"]  as? String {
+        if let shortVersion = Bundle.main.infoDictionary!["CFBundleShortVersionString"]  as? String {
             versionLabel.text = "v.\(shortVersion)"
         }
         
@@ -25,13 +25,13 @@ class AboutViewController: UIViewController {
         let message = LocalizationManager.sharedInstance.localizedString("about_text")
         messageLabel.text = message
         
-        messageLabel.layer.borderColor = UIColor(hex: 0xcacaca).CGColor
+        messageLabel.layer.borderColor = UIColor(hex: 0xcacaca).cgColor
         messageLabel.layer.borderWidth = 1
         
         messageLabel.contentInset = UIEdgeInsetsMake(10, 0, 10, 0);
     }
 
-    override func viewWillAppear(animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
     }
     
@@ -39,7 +39,7 @@ class AboutViewController: UIViewController {
         super.viewDidLayoutSubviews()
         
         // Hack to make the textview start at the top: http://stackoverflow.com/questions/26835944/uitextview-text-content-doesnt-start-from-the-top
-        messageLabel.contentOffset = CGPointZero
+        messageLabel.contentOffset = CGPoint.zero
     }
     
     override func didReceiveMemoryWarning() {
@@ -47,7 +47,7 @@ class AboutViewController: UIViewController {
         // Dispose of any resources that can be recreated.
     }
     
-    @IBAction func onClickDone(sender: AnyObject) {
-        dismissViewControllerAnimated(true, completion: nil)
+    @IBAction func onClickDone(_ sender: AnyObject) {
+        dismiss(animated: true, completion: nil)
     }
 }

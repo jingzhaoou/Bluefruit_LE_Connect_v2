@@ -13,9 +13,9 @@
  class AppDelegate: UIResponder, UIApplicationDelegate {
     
     var window: UIWindow?
-    private var splitDividerCover = UIView()
+    fileprivate var splitDividerCover = UIView()
     
-    func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         
         // Register default preferences
         //Preferences.resetDefaults()       // Debug Reset
@@ -25,7 +25,7 @@
         WatchSessionManager.sharedInstance.activateWithDelegate(self)
         
         // Check if there is any update to the fimware database
-        FirmwareUpdater.refreshSoftwareUpdatesDatabaseFromUrl(Preferences.updateServerUrl, completionHandler: nil)
+        FirmwareUpdater.refreshSoftwareUpdatesDatabase(from: Preferences.updateServerUrl, completionHandler: nil)
         
         // Setup SpliView
         let splitViewController = self.window!.rootViewController as! UISplitViewController
@@ -33,10 +33,10 @@
         
         // Style
         let navigationBarAppearance = UINavigationBar.appearance()
-        navigationBarAppearance.barTintColor = UIColor.blackColor()
+        navigationBarAppearance.barTintColor = UIColor.black
         //        navigationBarAppearance.alpha = 0.1
-        navigationBarAppearance.translucent = true
-        navigationBarAppearance.titleTextAttributes = [NSForegroundColorAttributeName: UIColor.whiteColor()]
+        navigationBarAppearance.isTranslucent = true
+        navigationBarAppearance.titleTextAttributes = [NSForegroundColorAttributeName: UIColor.white]
         
         /*
          let tabBarAppearance = UITabBar.appearance()
@@ -44,10 +44,10 @@
          */
         
         // Hack to hide the white split divider
-        splitViewController.view.backgroundColor = UIColor.darkGrayColor()
-        splitDividerCover.backgroundColor = UIColor.darkGrayColor()
+        splitViewController.view.backgroundColor = UIColor.darkGray
+        splitDividerCover.backgroundColor = UIColor.darkGray
         splitViewController.view.addSubview(splitDividerCover)
-        self.splitViewController(splitViewController, willChangeToDisplayMode: splitViewController.displayMode)
+        self.splitViewController(splitViewController, willChangeTo: splitViewController.displayMode)
         
         // Watch Session
         WatchSessionManager.sharedInstance.session?.sendMessage(["isActive": true], replyHandler: nil, errorHandler: nil)
@@ -55,28 +55,28 @@
         return true
     }
     
-    func applicationWillResignActive(application: UIApplication) {
+    func applicationWillResignActive(_ application: UIApplication) {
         // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
         // Use this method to pause ongoing tasks, disable timers, and throttle down OpenGL ES frame rates. Games should use this method to pause the game.
         
     }
     
-    func applicationDidEnterBackground(application: UIApplication) {
+    func applicationDidEnterBackground(_ application: UIApplication) {
         // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
         // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
     }
     
-    func applicationWillEnterForeground(application: UIApplication) {
+    func applicationWillEnterForeground(_ application: UIApplication) {
         // Called as part of the transition from the background to the inactive state; here you can undo many of the changes made on entering the background.
         
         
     }
     
-    func applicationDidBecomeActive(application: UIApplication) {
+    func applicationDidBecomeActive(_ application: UIApplication) {
         // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
     }
     
-    func applicationWillTerminate(application: UIApplication) {
+    func applicationWillTerminate(_ application: UIApplication) {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
         
         // Watch Session
@@ -86,11 +86,11 @@
     
     
     // MARK: - Handoff
-    func application(application: UIApplication, willContinueUserActivityWithType userActivityType: String) -> Bool {
+    func application(_ application: UIApplication, willContinueUserActivityWithType userActivityType: String) -> Bool {
         return userActivityType == HandoffManager.kUserActivityType
     }
     
-    func application(application: UIApplication, continueUserActivity userActivity: NSUserActivity, restorationHandler: ([AnyObject]?) -> Void) -> Bool {
+    func application(_ application: UIApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([Any]?) -> Void) -> Bool {
         
         DLog("continueUserActivity: \(userActivity.activityType)")
         if userActivity.activityType == HandoffManager.kUserActivityType {
@@ -103,7 +103,7 @@
         return false
     }
     
-    func application(application: UIApplication, didFailToContinueUserActivityWithType userActivityType: String, error: NSError) {
+    func application(_ application: UIApplication, didFailToContinueUserActivityWithType userActivityType: String, error: Error) {
         DLog("didFailToContinueUserActivityWithType: \(userActivityType). Error: \(error)")
     }
  }
@@ -111,7 +111,7 @@
  // MARK: - UISplitViewControllerDelegate
  extension AppDelegate: UISplitViewControllerDelegate {
     
-    func splitViewController(splitViewController: UISplitViewController, collapseSecondaryViewController secondaryViewController:UIViewController, ontoPrimaryViewController primaryViewController:UIViewController) -> Bool {
+    func splitViewController(_ splitViewController: UISplitViewController, collapseSecondary secondaryViewController:UIViewController, onto primaryViewController:UIViewController) -> Bool {
         
         if BleManager.sharedInstance.blePeripheralConnected == nil {
             return true
@@ -120,17 +120,17 @@
         return false
     }
     
-    func splitViewController(svc: UISplitViewController, willChangeToDisplayMode displayMode: UISplitViewControllerDisplayMode) {
+    func splitViewController(_ svc: UISplitViewController, willChangeTo displayMode: UISplitViewControllerDisplayMode) {
         // Hack to hide splitdivider cover
-        let isFullScreen = UIScreen.mainScreen().traitCollection.horizontalSizeClass == .Compact
-        let isCoverHidden = isFullScreen || displayMode != .AllVisible
-        splitDividerCover.hidden = isCoverHidden
+        let isFullScreen = UIScreen.main.traitCollection.horizontalSizeClass == .compact
+        let isCoverHidden = isFullScreen || displayMode != .allVisible
+        splitDividerCover.isHidden = isCoverHidden
         DLog("cover hidden: \(isCoverHidden)")
         if !isCoverHidden {
             let masterViewWidth = svc.primaryColumnWidth
             //let masterViewNavigationBarHeight = (svc.viewControllers[0] as! UINavigationController).navigationBar.bounds.size.height
             //splitDividerCover.frame = CGRectMake(masterViewWidth, 0, 1, masterViewNavigationBarHeight)
-            splitDividerCover.frame = CGRectMake(masterViewWidth, 0, 1, svc.view.bounds.size.height)
+            splitDividerCover.frame = CGRect(x: masterViewWidth, y: 0, width: 1, height: svc.view.bounds.size.height)
             DLog("cover frame: \(splitDividerCover.frame)")
             
         }
@@ -139,31 +139,31 @@
  
  // MARK: - WCSessionDelegate
  extension AppDelegate: WCSessionDelegate {
-    func sessionReachabilityDidChange(session: WCSession) {
-        DLog("sessionReachabilityDidChange: \(session.reachable ? "reachable":"not reachable")")
+    func sessionReachabilityDidChange(_ session: WCSession) {
+        DLog("sessionReachabilityDidChange: \(session.isReachable ? "reachable":"not reachable")")
         
-        if session.reachable {
+        if session.isReachable {
             // Update foreground status
-            let isActive = UIApplication.sharedApplication().applicationState != .Inactive
+            let isActive = UIApplication.shared.applicationState != .inactive
             WatchSessionManager.sharedInstance.session?.sendMessage(["isActive": isActive], replyHandler: nil, errorHandler: nil)
         }
     }
     
-    func session(session: WCSession, didReceiveMessage message: [String : AnyObject]) {
+    func session(_ session: WCSession, didReceiveMessage message: [String : Any]) {
         if message["command"] != nil {
             DLog("watchCommand notification")
-            NSNotificationCenter.defaultCenter().postNotificationName(WatchSessionManager.Notifications.DidReceiveWatchCommand.rawValue, object: nil, userInfo:message);
+            NotificationCenter.default.post(name: Notification.Name(rawValue: WatchSessionManager.Notifications.DidReceiveWatchCommand.rawValue), object: nil, userInfo:message);
         }
     }
     
-    func session(session: WCSession, didReceiveMessage message: [String : AnyObject], replyHandler: ([String : AnyObject]) -> Void) {
+    func session(_ session: WCSession, didReceiveMessage message: [String : Any], replyHandler: @escaping ([String : Any]) -> Void) {
         var replyValues: [String: AnyObject] = [:]
         
         if let command = message["command"] as? String {
             switch command {
             case "isActive":
-                let isActive = UIApplication.sharedApplication().applicationState != .Inactive
-                replyValues[command] = isActive
+                let isActive = UIApplication.shared.applicationState != .inactive
+                replyValues[command] = isActive as AnyObject?
 
             default:
                 DLog("didReceiveMessage with unknown command: \(command)")
@@ -176,15 +176,15 @@
     
     // Mandatory methods for XCode8
     @available(iOS 9.3, *)
-    func session(session: WCSession, activationDidCompleteWithState activationState: WCSessionActivationState, error: NSError?) {
+    func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
         
     }
 
-    func sessionDidDeactivate(session: WCSession) {
+    func sessionDidDeactivate(_ session: WCSession) {
         
     }
     
-    func sessionDidBecomeInactive(session: WCSession) {
+    func sessionDidBecomeInactive(_ session: WCSession) {
         
     }
  }

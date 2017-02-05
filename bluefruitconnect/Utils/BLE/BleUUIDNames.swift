@@ -15,16 +15,16 @@ class BleUUIDNames {
     static let sharedInstance = BleUUIDNames()
 
     // Data
-    private var gattUUIds : [String : String]?
+    fileprivate var gattUUIds : [String : String]?
 
     init() {
         // Read known UUIDs
-        let path = NSBundle.mainBundle().pathForResource("GattUUIDs", ofType: "plist")!
+        let path = Bundle.main.path(forResource: "GattUUIDs", ofType: "plist")!
         gattUUIds = NSDictionary(contentsOfFile: path) as? [String : String]
 
     }
     
-    func nameForUUID(uuid: String) -> String? {
+    func nameForUUID(_ uuid: String) -> String? {
         return gattUUIds?[uuid]
     }
 }

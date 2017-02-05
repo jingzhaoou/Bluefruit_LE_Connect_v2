@@ -12,34 +12,34 @@ class HelpViewController: UIViewController {
     @IBOutlet weak var titleLabel: UILabel!
     @IBOutlet weak var messageLabel: UITextView!
 
-    private var helpTitle: String?
-    private var helpMessage: String?
+    fileprivate var helpTitle: String?
+    fileprivate var helpMessage: String?
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        messageLabel.layer.borderColor = UIColor(hex: 0xcacaca).CGColor
+        messageLabel.layer.borderColor = UIColor(hex: 0xcacaca).cgColor
         messageLabel.layer.borderWidth = 1
         
         messageLabel.contentInset = UIEdgeInsetsMake(10, 0, 10, 0);
     }
     
-    override func viewWillAppear(animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
         updateUI()
     }
     
-    func setHelp(message: String, title: String) {
+    func setHelp(_ message: String, title: String) {
         helpTitle = title
         helpMessage = message
         
-        if isViewLoaded() {
+        if isViewLoaded {
             updateUI()
         }
     }
     
-    private func updateUI() {
+    fileprivate func updateUI() {
         // Title
         titleLabel.text = helpTitle
         
@@ -51,7 +51,7 @@ class HelpViewController: UIViewController {
         super.viewDidLayoutSubviews()
         
         // Hack to make the textview start at the top: http://stackoverflow.com/questions/26835944/uitextview-text-content-doesnt-start-from-the-top
-        messageLabel.contentOffset = CGPointZero
+        messageLabel.contentOffset = CGPoint.zero
     }
     
     override func didReceiveMemoryWarning() {
@@ -59,8 +59,8 @@ class HelpViewController: UIViewController {
         // Dispose of any resources that can be recreated.
     }
     
-    @IBAction func onClickDone(sender: AnyObject) {
-        dismissViewControllerAnimated(true, completion: nil)
+    @IBAction func onClickDone(_ sender: AnyObject) {
+        dismiss(animated: true, completion: nil)
     }
 
 }

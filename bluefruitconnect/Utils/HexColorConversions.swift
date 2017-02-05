@@ -9,7 +9,7 @@
 import UIKit
 
 // MARK: - Colors
-func colorHexString(color: UIColor) -> String {
+func colorHexString(_ color: UIColor) -> String {
     var r:CGFloat = 0
     var g:CGFloat = 0
     var b:CGFloat = 0
@@ -22,7 +22,7 @@ func colorHexString(color: UIColor) -> String {
     return String(format:"#%06x", rgb)
 }
 
-func colorHexInt(color: UIColor) -> Int {
+func colorHexInt(_ color: UIColor) -> Int {
     var r:CGFloat = 0
     var g:CGFloat = 0
     var b:CGFloat = 0
@@ -35,7 +35,7 @@ func colorHexInt(color: UIColor) -> Int {
 }
 
 #if os(iOS)
-func colorFromHexUInt(hex: UInt) -> UIColor? {
+func colorFromHexUInt(_ hex: UInt) -> UIColor? {
     var result: UIColor?
 //    if let hex = UInt(hexString, radix: 16) {
 //        result = UIColor.colorWithHex(hex)

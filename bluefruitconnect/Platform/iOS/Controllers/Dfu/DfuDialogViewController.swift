@@ -25,30 +25,30 @@ class DfuDialogViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        cancelButton.hidden = true
+        cancelButton.isHidden = true
     }
     
-    override func viewWillAppear(animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
         // Fade-in background
         backgroundView.alpha = 0
-        UIView.animateWithDuration(0.5, animations: { [unowned self] () -> Void in
+        UIView.animate(withDuration: 0.5, animations: { [unowned self] () -> Void in
             self.backgroundView.alpha = 1
             })
         
         
         // Disable sleep mode while the DFU Dialog progress is shown
-        UIApplication.sharedApplication().idleTimerDisabled = true
+        UIApplication.shared.isIdleTimerDisabled = true
         DLog("Disable sleep mode")
     }
     
     
-    override func viewWillDisappear(animated: Bool) {
+    override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         
         // Enable sleep again mode when the DFU Dialog progress dissapears
-        UIApplication.sharedApplication().idleTimerDisabled = false
+        UIApplication.shared.isIdleTimerDisabled = false
         DLog("Restore sleep mode")
         
     }
@@ -58,17 +58,17 @@ class DfuDialogViewController: UIViewController {
         // Dispose of any resources that can be recreated.
     }
     
-    func setProgressText(text : String) {
+    func setProgressText(_ text : String) {
         progressLabel.text = text
     }
     
-    func setProgress(value : Double) {
-        cancelButton.hidden = value <= 0
+    func setProgress(_ value : Double) {
+        cancelButton.isHidden = value <= 0
         progressIndicator.progress = Float(value/100.0)
         progressPercentageLabel.text = String(format: "%1.0f%%", value);
     }
     
-    @IBAction func onClickCancel(sender: AnyObject) {
+    @IBAction func onClickCancel(_ sender: AnyObject) {
         delegate?.onUpdateDialogCancel()
     }
 

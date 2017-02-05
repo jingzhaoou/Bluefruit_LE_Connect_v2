@@ -9,7 +9,7 @@
 import UIKit
 
 protocol NeopixelColorPickerViewControllerDelegate: class {
-    func onColorPickerChooseColor(color: UIColor)
+    func onColorPickerChooseColor(_ color: UIColor)
 }
 
 class NeopixelColorPickerViewController: UIViewController {
@@ -22,10 +22,10 @@ class NeopixelColorPickerViewController: UIViewController {
     @IBOutlet weak var sliderGradientView: GradientView!
 
     // Data
-    private var selectedColorComponents: [UInt8]?
-    private var wheelView: ISColorWheel = ISColorWheel()
+    fileprivate var selectedColorComponents: [UInt8]?
+    fileprivate var wheelView: ISColorWheel = ISColorWheel()
 
-    private var selectedColor = UIColor.whiteColor()
+    fileprivate var selectedColor = UIColor.white
     weak var delegate: NeopixelColorPickerViewControllerDelegate?
     
     override func viewDidLoad() {
@@ -34,15 +34,15 @@ class NeopixelColorPickerViewController: UIViewController {
         // UI
         colorView.layer.cornerRadius = 8
         colorView.layer.borderWidth = 2
-        colorView.layer.borderColor = UIColor.blackColor().CGColor
+        colorView.layer.borderColor = UIColor.black.cgColor
         
         sliderGradientView.layer.borderWidth = 2
-        sliderGradientView.layer.borderColor = UIColor.blackColor().CGColor
+        sliderGradientView.layer.borderColor = UIColor.black.cgColor
         sliderGradientView.layer.cornerRadius = sliderGradientView.bounds.size.height/2
         sliderGradientView.layer.masksToBounds = true
         
-        brightnessSlider.setMinimumTrackImage(UIImage(), forState: .Normal)
-        brightnessSlider.setMaximumTrackImage(UIImage(), forState: .Normal)
+        brightnessSlider.setMinimumTrackImage(UIImage(), for: UIControlState())
+        brightnessSlider.setMaximumTrackImage(UIImage(), for: UIControlState())
         
         // Setup wheel view
         wheelView.continuous = true
@@ -69,13 +69,13 @@ class NeopixelColorPickerViewController: UIViewController {
     }
     
     // MARK: - Actions
-    @IBAction func onBrightnessValueChanged(sender: AnyObject) {
+    @IBAction func onBrightnessValueChanged(_ sender: AnyObject) {
         colorWheelDidChangeColor(wheelView)
     }
     
-    @IBAction func onClickSend(sender: AnyObject) {
+    @IBAction func onClickSend(_ sender: AnyObject) {
         delegate?.onColorPickerChooseColor(selectedColor)
-        dismissViewControllerAnimated(true, completion: nil)
+        dismiss(animated: true, completion: nil)
     }
 
 }
@@ -84,13 +84,13 @@ class NeopixelColorPickerViewController: UIViewController {
 
 // MARK: - ISColorWheelDelegate
 extension NeopixelColorPickerViewController : ISColorWheelDelegate {
-    func colorWheelDidChangeColor(colorWheel:ISColorWheel) {
+    func colorWheelDidChangeColor(_ colorWheel:ISColorWheel) {
         
         let colorWheelColor = colorWheel.currentColor
         
         let brightness = CGFloat(brightnessSlider.value)
         var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0
-        colorWheelColor.getRed(&red, green: &green, blue: &blue, alpha: nil)
+        colorWheelColor?.getRed(&red, green: &green, blue: &blue, alpha: nil)
         red = red*brightness
         green = green*brightness
         blue = blue*brightness

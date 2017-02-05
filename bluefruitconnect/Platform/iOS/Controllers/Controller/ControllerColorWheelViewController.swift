@@ -9,7 +9,7 @@
 import UIKit
 
 protocol ControllerColorWheelViewControllerDelegate: class {
-    func onSendColorComponents(colorComponents: [UInt8])
+    func onSendColorComponents(_ colorComponents: [UInt8])
 }
 
 class ControllerColorWheelViewController: UIViewController {
@@ -28,8 +28,8 @@ class ControllerColorWheelViewController: UIViewController {
     // Data
     weak var delegate: ControllerColorWheelViewControllerDelegate?
     
-    private var selectedColorComponents: [UInt8]?
-    private var wheelView: ISColorWheel = ISColorWheel()
+    fileprivate var selectedColorComponents: [UInt8]?
+    fileprivate var wheelView: ISColorWheel = ISColorWheel()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -37,15 +37,15 @@ class ControllerColorWheelViewController: UIViewController {
         // UI
         colorView.layer.cornerRadius = 8
         colorView.layer.borderWidth = 2
-        colorView.layer.borderColor = UIColor.blackColor().CGColor
+        colorView.layer.borderColor = UIColor.black.cgColor
 
         sliderGradientView.layer.borderWidth = 2
-        sliderGradientView.layer.borderColor = UIColor.blackColor().CGColor
+        sliderGradientView.layer.borderColor = UIColor.black.cgColor
         sliderGradientView.layer.cornerRadius = sliderGradientView.bounds.size.height/2
         sliderGradientView.layer.masksToBounds = true
         
-        brightnessSlider.setMinimumTrackImage(UIImage(), forState: .Normal)
-        brightnessSlider.setMaximumTrackImage(UIImage(), forState: .Normal)
+        brightnessSlider.setMinimumTrackImage(UIImage(), for: UIControlState())
+        brightnessSlider.setMaximumTrackImage(UIImage(), for: UIControlState())
         
         // Setup wheel view
         wheelView.continuous = true
@@ -72,38 +72,38 @@ class ControllerColorWheelViewController: UIViewController {
     }
 
     // MARK: - Actions
-    @IBAction func onBrightnessValueChanged(sender: AnyObject) {
+    @IBAction func onBrightnessValueChanged(_ sender: AnyObject) {
         colorWheelDidChangeColor(wheelView)
     }
 
-   @IBAction func onClickSend(sender: AnyObject) {
+   @IBAction func onClickSend(_ sender: AnyObject) {
     
-        if let delegate = delegate, selectedColorComponents = selectedColorComponents {
+        if let delegate = delegate, let selectedColorComponents = selectedColorComponents {
             delegate.onSendColorComponents(selectedColorComponents)
         }
     }
     
-    @IBAction func onClickHelp(sender: UIBarButtonItem) {
+    @IBAction func onClickHelp(_ sender: UIBarButtonItem) {
         let localizationManager = LocalizationManager.sharedInstance
-        let helpViewController = storyboard!.instantiateViewControllerWithIdentifier("HelpViewController") as! HelpViewController
+        let helpViewController = storyboard!.instantiateViewController(withIdentifier: "HelpViewController") as! HelpViewController
         helpViewController.setHelp(localizationManager.localizedString("colorpicker_help_text"), title: localizationManager.localizedString("colorpicker_help_title"))
         let helpNavigationController = UINavigationController(rootViewController: helpViewController)
-        helpNavigationController.modalPresentationStyle = .Popover
+        helpNavigationController.modalPresentationStyle = .popover
         helpNavigationController.popoverPresentationController?.barButtonItem = sender
         
-        presentViewController(helpNavigationController, animated: true, completion: nil)
+        present(helpNavigationController, animated: true, completion: nil)
     }
 }
 
 // MARK: - ISColorWheelDelegate
 extension ControllerColorWheelViewController : ISColorWheelDelegate {
-    func colorWheelDidChangeColor(colorWheel:ISColorWheel) {
+    func colorWheelDidChangeColor(_ colorWheel:ISColorWheel) {
         
         let colorWheelColor = colorWheel.currentColor
         
         let brightness = CGFloat(brightnessSlider.value)
         var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0
-        colorWheelColor.getRed(&red, green: &green, blue: &blue, alpha: nil)
+        colorWheelColor?.getRed(&red, green: &green, blue: &blue, alpha: nil)
         red = red*brightness
         green = green*brightness
         blue = blue*brightness

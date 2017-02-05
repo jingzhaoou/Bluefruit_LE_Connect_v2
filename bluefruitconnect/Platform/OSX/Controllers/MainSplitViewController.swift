@@ -23,7 +23,7 @@ class MainSplitViewController: NSSplitViewController {
         BleManager.sharedInstance.startScan()
     }
     
-    override func splitView(splitView: NSSplitView,
+    override func splitView(_ splitView: NSSplitView,
         constrainSplitPosition proposedPosition: CGFloat,
         ofSubviewAt dividerIndex: Int) -> CGFloat {
             

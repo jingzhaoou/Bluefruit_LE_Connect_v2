@@ -13,15 +13,15 @@ class PinIOViewController: NSViewController {
     // UI
     @IBOutlet weak var baseTableView: NSTableView!
     @IBOutlet weak var statusLabel: NSTextField!
-    private var queryCapabilitiesAlert: NSAlert?
+    fileprivate var queryCapabilitiesAlert: NSAlert?
 
     // Data
-    private let pinIO = PinIOModuleManager()
-    private var tableRowOpen: Int?
-    private var isQueryingFinished = false
-    private var isTabVisible = false
+    fileprivate let pinIO = PinIOModuleManager()
+    fileprivate var tableRowOpen: Int?
+    fileprivate var isQueryingFinished = false
+    fileprivate var isTabVisible = false
 
-    private var waitingDiscoveryAlert: NSAlert?
+    fileprivate var waitingDiscoveryAlert: NSAlert?
     var infoFinishedScanning = false {
         didSet {
             if infoFinishedScanning != oldValue {
@@ -43,17 +43,17 @@ class PinIOViewController: NSViewController {
         baseTableView.rowHeight = 52
     }
     
-    func uartIsReady(notification: NSNotification) {
+    func uartIsReady(_ notification: Notification) {
         DLog("Uart is ready")
-        let notificationCenter = NSNotificationCenter.defaultCenter()
-        notificationCenter.removeObserver(self, name: UartManager.UartNotifications.DidBecomeReady.rawValue, object: nil)
+        let notificationCenter = NotificationCenter.default
+        notificationCenter.removeObserver(self, name: NSNotification.Name(rawValue: UartManager.UartNotifications.DidBecomeReady.rawValue), object: nil)
         
-        dispatch_async(dispatch_get_main_queue(),{ [unowned self] in
+        DispatchQueue.main.async(execute: { [unowned self] in
             self.setupFirmata()
             })
     }
     
-    private func setupFirmata() {
+    fileprivate func setupFirmata() {
         // Reset Firmata and query capabilities
         pinIO.reset()
         tableRowOpen = nil
@@ -61,7 +61,7 @@ class PinIOViewController: NSViewController {
         startQueryCapabilitiesProcess()
     }
     
-    private func startQueryCapabilitiesProcess() {
+    fileprivate func startQueryCapabilitiesProcess() {
         guard isTabVisible else {
             return
         }
@@ -83,13 +83,13 @@ class PinIOViewController: NSViewController {
             let localizationManager = LocalizationManager.sharedInstance
             let alert = NSAlert()
             alert.messageText = localizationManager.localizedString("pinio_capabilityquery_querying_title")
-            alert.addButtonWithTitle(localizationManager.localizedString("dialog_cancel"))
-            alert.alertStyle = .Warning
-            alert.beginSheetModalForWindow(window) { [unowned self] (returnCode) -> Void in
+            alert.addButton(withTitle: localizationManager.localizedString("dialog_cancel"))
+            alert.alertStyle = .warning
+            alert.beginSheetModal(for: window, completionHandler: { [unowned self] (returnCode) -> Void in
                 if returnCode == NSAlertFirstButtonReturn {
                     self.pinIO.endPinQuery(true)
                 }
-            }
+            }) 
             queryCapabilitiesAlert = alert
         }
         self.pinIO.queryCapabilities()
@@ -107,16 +107,16 @@ class PinIOViewController: NSViewController {
             let alert = NSAlert()
             alert.messageText = localizationManager.localizedString("pinio_capabilityquery_expired_title")
             alert.informativeText = localizationManager.localizedString("pinio_capabilityquery_expired_message")
-            alert.addButtonWithTitle(localizationManager.localizedString("dialog_ok"))
-            alert.alertStyle = .Warning
-            alert.beginSheetModalForWindow(window) { (returnCode) -> Void in
+            alert.addButton(withTitle: localizationManager.localizedString("dialog_ok"))
+            alert.alertStyle = .warning
+            alert.beginSheetModal(for: window, completionHandler: { (returnCode) -> Void in
                 if returnCode == NSAlertFirstButtonReturn {
                 }
-            }
+            }) 
         }
     }
 
-    @IBAction func onClickQuery(sender: AnyObject) {
+    @IBAction func onClickQuery(_ sender: AnyObject) {
         setupFirmata()
     }
 }
@@ -127,8 +127,8 @@ extension PinIOViewController : DetailTab {
         pinIO.start()
 
         // Hack: wait a moment because a disconnect could call tabWillAppear just before disconnecting
-        let dispatchTime: dispatch_time_t = dispatch_time(DISPATCH_TIME_NOW, Int64(0.2 * Double(NSEC_PER_SEC)))
-        dispatch_after(dispatchTime, dispatch_get_main_queue(), { [weak self] in
+        let dispatchTime: DispatchTime = DispatchTime.now() + Double(Int64(0.2 * Double(NSEC_PER_SEC))) / Double(NSEC_PER_SEC)
+        DispatchQueue.main.asyncAfter(deadline: dispatchTime, execute: { [weak self] in
             self?.startPinIo()
         })
     }
@@ -142,7 +142,7 @@ extension PinIOViewController : DetailTab {
         
     }
 
-    private func startPinIo() {
+    fileprivate func startPinIo() {
         
         guard BleManager.sharedInstance.blePeripheralConnected != nil else {
             DLog("trying to make pionio tab visible while disconnecting")
@@ -162,14 +162,14 @@ extension PinIOViewController : DetailTab {
                     let localizationManager = LocalizationManager.sharedInstance
                     waitingDiscoveryAlert = NSAlert()
                     waitingDiscoveryAlert!.messageText = "Waiting for discovery to finish..."
-                    waitingDiscoveryAlert!.addButtonWithTitle(localizationManager.localizedString("dialog_cancel"))
-                    waitingDiscoveryAlert!.alertStyle = .Warning
-                    waitingDiscoveryAlert!.beginSheetModalForWindow(window) { [unowned self] (returnCode) -> Void in
+                    waitingDiscoveryAlert!.addButton(withTitle: localizationManager.localizedString("dialog_cancel"))
+                    waitingDiscoveryAlert!.alertStyle = .warning
+                    waitingDiscoveryAlert!.beginSheetModal(for: window, completionHandler: { [unowned self] (returnCode) -> Void in
                         if returnCode == NSAlertFirstButtonReturn {
                             self.waitingDiscoveryAlert = nil
                             self.pinIO.endPinQuery(true)
                         }
-                    }
+                    }) 
                 }
             }
             else if (UartManager.sharedInstance.isReady()) {
@@ -178,8 +178,8 @@ extension PinIOViewController : DetailTab {
             else {
                 DLog("Wait for uart to be ready to start PinIO setup")
                 
-                let notificationCenter =  NSNotificationCenter.defaultCenter()
-                notificationCenter.addObserver(self, selector: #selector(PinIOViewController.uartIsReady(_:)), name: UartManager.UartNotifications.DidBecomeReady.rawValue, object: nil)
+                let notificationCenter =  NotificationCenter.default
+                notificationCenter.addObserver(self, selector: #selector(PinIOViewController.uartIsReady(_:)), name: NSNotification.Name(rawValue: UartManager.UartNotifications.DidBecomeReady.rawValue), object: nil)
             }
         }
     }
@@ -189,7 +189,7 @@ extension PinIOViewController : DetailTab {
 // MARK: - NSOutlineViewDataSource
 extension PinIOViewController : NSTableViewDataSource {
     
-    func numberOfRowsInTableView(tableView: NSTableView) -> Int {
+    func numberOfRows(in tableView: NSTableView) -> Int {
         return pinIO.pins.count
     }
     
@@ -199,10 +199,10 @@ extension PinIOViewController : NSTableViewDataSource {
 
 extension PinIOViewController: NSTableViewDelegate {
     
-    func tableView(tableView: NSTableView, viewForTableColumn tableColumn: NSTableColumn?, row: Int) -> NSView? {
+    func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         let pin = pinIO.pins[row]
         
-        let cell = tableView.makeViewWithIdentifier("PinCell", owner: self) as! PinTableCellView
+        let cell = tableView.make(withIdentifier: "PinCell", owner: self) as! PinTableCellView
         
         cell.setPin(pin, pinIndex:row)
         cell.delegate = self
@@ -210,10 +210,10 @@ extension PinIOViewController: NSTableViewDelegate {
         return cell;
     }
 
-    func tableView(tableView: NSTableView, heightOfRow row: Int) -> CGFloat {
-        if let tableRowOpen = tableRowOpen where row == tableRowOpen {
+    func tableView(_ tableView: NSTableView, heightOfRow row: Int) -> CGFloat {
+        if let tableRowOpen = tableRowOpen, row == tableRowOpen {
             let pinOpen = pinIO.pins[tableRowOpen]
-            return pinOpen.mode == .Input || pinOpen.mode == .Analog ? 106 : 130
+            return pinOpen.mode == .input || pinOpen.mode == .analog ? 106 : 130
         }
         else {
             return 52
@@ -228,24 +228,24 @@ extension PinIOViewController: NSTableViewDelegate {
 
 // MARK:  PinTableCellViewDelegate
 extension PinIOViewController : PinTableCellViewDelegate {
-    func onPinToggleCell(pinIndex: Int) {
+    func onPinToggleCell(_ pinIndex: Int) {
         // Change open row
         let previousTableRowOpen = tableRowOpen
         tableRowOpen = pinIndex == tableRowOpen ? nil: pinIndex
         
         // Animate changes
         NSAnimationContext.beginGrouping()
-        NSAnimationContext.currentContext().duration = 0.25
-        baseTableView.noteHeightOfRowsWithIndexesChanged(NSIndexSet(index: pinIndex))
-        if let previousTableRowOpen = previousTableRowOpen where previousTableRowOpen >= 0 {
-            baseTableView.noteHeightOfRowsWithIndexesChanged(NSIndexSet(index: previousTableRowOpen))
+        NSAnimationContext.current().duration = 0.25
+        baseTableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: pinIndex))
+        if let previousTableRowOpen = previousTableRowOpen, previousTableRowOpen >= 0 {
+            baseTableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: previousTableRowOpen))
         }
-        let rowRect = baseTableView.rectOfRow(pinIndex)
-        baseTableView.scrollRectToVisible(rowRect)
+        let rowRect = baseTableView.rect(ofRow: pinIndex)
+        baseTableView.scrollToVisible(rowRect)
         NSAnimationContext.endGrouping()
 
     }
-    func onPinModeChanged(mode: PinIOModuleManager.PinData.Mode, pinIndex: Int) {
+    func onPinModeChanged(_ mode: PinIOModuleManager.PinData.Mode, pinIndex: Int) {
         let pin = pinIO.pins[pinIndex]
         pinIO.setControlMode(pin, mode: mode)
 
@@ -253,24 +253,24 @@ extension PinIOViewController : PinTableCellViewDelegate {
         
         // Animate changes
         NSAnimationContext.beginGrouping()
-        NSAnimationContext.currentContext().duration = 0.25
-        baseTableView.reloadDataForRowIndexes(NSIndexSet(index: pinIndex), columnIndexes: NSIndexSet(index: 0))
-        baseTableView.noteHeightOfRowsWithIndexesChanged(NSIndexSet(index: pinIndex))
-        let rowRect = baseTableView.rectOfRow(pinIndex)
-        baseTableView.scrollRectToVisible(rowRect)
+        NSAnimationContext.current().duration = 0.25
+        baseTableView.reloadData(forRowIndexes: IndexSet(integer: pinIndex), columnIndexes: IndexSet(integer: 0))
+        baseTableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: pinIndex))
+        let rowRect = baseTableView.rect(ofRow: pinIndex)
+        baseTableView.scrollToVisible(rowRect)
         NSAnimationContext.endGrouping()
         
     }
-    func onPinDigitalValueChanged(value: PinIOModuleManager.PinData.DigitalValue, pinIndex: Int) {
+    func onPinDigitalValueChanged(_ value: PinIOModuleManager.PinData.DigitalValue, pinIndex: Int) {
         let pin = pinIO.pins[pinIndex]
         pinIO.setDigitalValue(pin, value: value)
 
-        baseTableView.reloadDataForRowIndexes(NSIndexSet(index: pinIndex), columnIndexes: NSIndexSet(index: 0))
+        baseTableView.reloadData(forRowIndexes: IndexSet(integer: pinIndex), columnIndexes: IndexSet(integer: 0))
     }
-    func onPinAnalogValueChanged(value: Double, pinIndex: Int) {
+    func onPinAnalogValueChanged(_ value: Double, pinIndex: Int) {
         let pin = pinIO.pins[pinIndex]
         if pinIO.setPMWValue(pin, value: Int(value)) {
-            baseTableView.reloadDataForRowIndexes(NSIndexSet(index: pinIndex), columnIndexes: NSIndexSet(index: 0))
+            baseTableView.reloadData(forRowIndexes: IndexSet(integer: pinIndex), columnIndexes: IndexSet(integer: 0))
         }
     }
 }
@@ -278,13 +278,13 @@ extension PinIOViewController : PinTableCellViewDelegate {
 // MARK: - PinIOModuleManagerDelegate
 
 extension PinIOViewController: PinIOModuleManagerDelegate {
-    func onPinIODidEndPinQuery(isDefaultConfigurationAssumed: Bool) {
-        dispatch_async(dispatch_get_main_queue(),{ [unowned self] in
+    func onPinIODidEndPinQuery(_ isDefaultConfigurationAssumed: Bool) {
+        DispatchQueue.main.async(execute: { [unowned self] in
             self.isQueryingFinished = true
             self.baseTableView.reloadData()
             
             // Dismiss current alert
-            if let window = self.view.window, queryCapabilitiesAlert = self.queryCapabilitiesAlert {
+            if let window = self.view.window, let queryCapabilitiesAlert = self.queryCapabilitiesAlert {
                 window.endSheet(queryCapabilitiesAlert.window)
                 self.queryCapabilitiesAlert = nil
             }
@@ -300,7 +300,7 @@ extension PinIOViewController: PinIOModuleManagerDelegate {
     }
 
     func onPinIODidReceivePinState() {
-        dispatch_async(dispatch_get_main_queue(),{ [unowned self] in
+        DispatchQueue.main.async(execute: { [unowned self] in
             self.baseTableView.reloadData()
             })
     }

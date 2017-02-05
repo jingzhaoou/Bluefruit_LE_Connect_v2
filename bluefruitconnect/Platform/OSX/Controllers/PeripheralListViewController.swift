@@ -29,7 +29,7 @@ class PeripheralListViewController: NSViewController {
     @IBOutlet weak var filtersClearButton: NSButton!
 
     // Data
-    private var peripheralList: PeripheralList! = nil
+    fileprivate var peripheralList: PeripheralList! = nil
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -44,19 +44,19 @@ class PeripheralListViewController: NSViewController {
         StatusManager.sharedInstance.peripheralListViewController = self
         
         // Subscribe to Ble Notifications
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(didDiscoverPeripheral(_:)), name: BleManager.BleNotifications.DidDiscoverPeripheral.rawValue, object: nil)
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(didDiscoverPeripheral(_:)), name: BleManager.BleNotifications.DidUnDiscoverPeripheral.rawValue, object: nil)
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(didDisconnectFromPeripheral(_:)), name: BleManager.BleNotifications.DidDisconnectFromPeripheral.rawValue, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(didDiscoverPeripheral(_:)), name: NSNotification.Name(rawValue: BleManager.BleNotifications.DidDiscoverPeripheral.rawValue), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(didDiscoverPeripheral(_:)), name: NSNotification.Name(rawValue: BleManager.BleNotifications.DidUnDiscoverPeripheral.rawValue), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(didDisconnectFromPeripheral(_:)), name: NSNotification.Name(rawValue: BleManager.BleNotifications.DidDisconnectFromPeripheral.rawValue), object: nil)
         
         // Appearance
         filtersBackgroundView.wantsLayer = true
-        filtersBackgroundView.layer?.backgroundColor = NSColor.blackColor().colorWithAlphaComponent(0.05).CGColor
+        filtersBackgroundView.layer?.backgroundColor = NSColor.black.withAlphaComponent(0.05).cgColor
     }
 
     deinit {
-        NSNotificationCenter.defaultCenter().removeObserver(self, name: BleManager.BleNotifications.DidDiscoverPeripheral.rawValue, object: nil)
-        NSNotificationCenter.defaultCenter().removeObserver(self, name: BleManager.BleNotifications.DidUnDiscoverPeripheral.rawValue, object: nil)
-        NSNotificationCenter.defaultCenter().removeObserver(self, name: BleManager.BleNotifications.DidDisconnectFromPeripheral.rawValue, object: nil)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: BleManager.BleNotifications.DidDiscoverPeripheral.rawValue), object: nil)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: BleManager.BleNotifications.DidUnDiscoverPeripheral.rawValue), object: nil)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: BleManager.BleNotifications.DidDisconnectFromPeripheral.rawValue), object: nil)
     }
     
     override func viewWillAppear() {
@@ -72,21 +72,21 @@ class PeripheralListViewController: NSViewController {
     }
     
 
-    func didDiscoverPeripheral(notification : NSNotification) {
-        dispatch_async(dispatch_get_main_queue(), {[unowned self] in
+    func didDiscoverPeripheral(_ notification : Notification) {
+        DispatchQueue.main.async(execute: {[unowned self] in
 
             // Reload data
             self.baseTableView.reloadData()
             
             // Select identifier if still available
             if let selectedPeripheralRow = self.peripheralList.selectedPeripheralRow {
-                self.baseTableView.selectRowIndexes(NSIndexSet(index: selectedPeripheralRow), byExtendingSelection: false)
+                self.baseTableView.selectRowIndexes(IndexSet(integer: selectedPeripheralRow), byExtendingSelection: false)
             }
         })
     }
 
-    func didDisconnectFromPeripheral(notification : NSNotification) {
-        dispatch_async(dispatch_get_main_queue(), {[unowned self] in
+    func didDisconnectFromPeripheral(_ notification : Notification) {
+        DispatchQueue.main.async(execute: {[unowned self] in
             
             if (BleManager.sharedInstance.blePeripheralConnected == nil && self.baseTableView.selectedRow >= 0) {
                 
@@ -98,20 +98,20 @@ class PeripheralListViewController: NSViewController {
                     let localizationManager = LocalizationManager.sharedInstance
                     let alert = NSAlert()
                     alert.messageText = localizationManager.localizedString("peripherallist_peripheraldisconnected")
-                    alert.addButtonWithTitle(localizationManager.localizedString("dialog_ok"))
-                    alert.alertStyle = .Warning
-                    alert.beginSheetModalForWindow(self.view.window!, completionHandler: nil)
+                    alert.addButton(withTitle: localizationManager.localizedString("dialog_ok"))
+                    alert.alertStyle = .warning
+                    alert.beginSheetModal(for: self.view.window!, completionHandler: nil)
                 }
             }
             })
     }
     
     // MARK: -
-    func selectRowForPeripheralIdentifier(identifier : String?) {
+    func selectRowForPeripheralIdentifier(_ identifier : String?) {
         var found = false
         
         if let index = peripheralList.indexOfPeripheralIdentifier(identifier) {
-            baseTableView.selectRowIndexes(NSIndexSet(index: index), byExtendingSelection: false)
+            baseTableView.selectRowIndexes(IndexSet(integer: index), byExtendingSelection: false)
             found = true
         }
         
@@ -121,7 +121,7 @@ class PeripheralListViewController: NSViewController {
     }
     
     // MARK: - Filters
-    private func openFiltersPanel(isOpen: Bool, animated: Bool) {
+    fileprivate func openFiltersPanel(_ isOpen: Bool, animated: Bool) {
         
         Preferences.scanFilterIsPanelOpen = isOpen
         self.filtersDisclosureButton.state = isOpen ? NSOnState:NSOffState
@@ -134,49 +134,49 @@ class PeripheralListViewController: NSViewController {
             }, completionHandler: nil)
     }
 
-    private func updateFiltersTitle() {
+    fileprivate func updateFiltersTitle() {
         let filtersTitle = peripheralList.filtersDescription()
         filterTitleTextField.stringValue = filtersTitle != nil ? "Filter: \(filtersTitle!)" : "No filter selected"
         
-        filtersClearButton.hidden = !peripheralList.isAnyFilterEnabled()
+        filtersClearButton.isHidden = !peripheralList.isAnyFilterEnabled()
     }
     
-    func onFilterNameSettingsNameContains(sender: NSMenuItem) {
+    func onFilterNameSettingsNameContains(_ sender: NSMenuItem) {
         peripheralList.isFilterNameExact = false
         updateFilters()
     }
     
-    func onFilterNameSettingsNameEquals(sender: NSMenuItem) {
+    func onFilterNameSettingsNameEquals(_ sender: NSMenuItem) {
         peripheralList.isFilterNameExact = true
         updateFilters()
     }
     
-    func onFilterNameSettingsMatchCase(sender: NSMenuItem) {
+    func onFilterNameSettingsMatchCase(_ sender: NSMenuItem) {
         peripheralList.isFilterNameCaseInsensitive = false
         updateFilters()
     }
     
-    func onFilterNameSettingsIgnoreCase(sender: NSMenuItem) {
+    func onFilterNameSettingsIgnoreCase(_ sender: NSMenuItem) {
         peripheralList.isFilterNameCaseInsensitive = true
         updateFilters()
     }
     
-    private func updateFilters() {
+    fileprivate func updateFilters() {
         updateFiltersTitle()
         baseTableView.reloadData()
     }
     
-    private func setRssiSliderValue(value: Int?) {
+    fileprivate func setRssiSliderValue(_ value: Int?) {
         filtersRssiSlider.integerValue = value != nil ? -value! : 100
     }
     
-    private func updateRssiValueLabel() {
+    fileprivate func updateRssiValueLabel() {
         filterRssiValueLabel.stringValue = "\(-filtersRssiSlider.integerValue) dBM"
     }
     
     
     // MARK: - Advertising Packet
-    private func showAdverisingPacketData(blePeripheral: BlePeripheral) {
+    fileprivate func showAdverisingPacketData(_ blePeripheral: BlePeripheral) {
         let localizationManager = LocalizationManager.sharedInstance
         var advertisementString = ""
 
@@ -187,7 +187,7 @@ class PeripheralListViewController: NSViewController {
                 advertisementString += "Local name: \(name)\n"
                 
             case CBAdvertisementDataManufacturerDataKey:
-                let manufacturerData = value as! NSData
+                let manufacturerData = value as! Data
                 let manufacturerHexString =  hexString(manufacturerData)
                 advertisementString += "Manufacturer: \(manufacturerHexString)\n"
                 
@@ -195,25 +195,25 @@ class PeripheralListViewController: NSViewController {
                 let serviceUuids = value as! [CBUUID]
                 advertisementString += "Services UUIDs:\n"
                 for (cbuuid) in serviceUuids {
-                    advertisementString += "\t\(cbuuid.UUIDString)\n"
+                    advertisementString += "\t\(cbuuid.uuidString)\n"
                 }
                 
             case CBAdvertisementDataServiceDataKey:
-                let serviceData = value as! [CBUUID: NSData]
+                let serviceData = value as! [CBUUID: Data]
                 advertisementString += "Services Data:\n"
                 for (cbuuid, data) in serviceData {
-                    advertisementString += "\tUUID: \(cbuuid.UUIDString) Data: \(hexString(data))\n"
+                    advertisementString += "\tUUID: \(cbuuid.uuidString) Data: \(hexString(data))\n"
                 }
                 
             case CBAdvertisementDataOverflowServiceUUIDsKey:
                 let serviceUuids = value as! [CBUUID]
                 advertisementString += "Overflow services:\n"
                 for (cbuuid) in serviceUuids {
-                    advertisementString += "\t\(cbuuid.UUIDString)\n"
+                    advertisementString += "\t\(cbuuid.uuidString)\n"
                 }
             case CBAdvertisementDataTxPowerLevelKey:
                 let txPower = value as! NSNumber
-                advertisementString += "TX Power Level: \(txPower.integerValue)\n"
+                advertisementString += "TX Power Level: \(txPower.intValue)\n"
                 
             case CBAdvertisementDataIsConnectable:
                 let isConnectable = value as! Bool
@@ -223,7 +223,7 @@ class PeripheralListViewController: NSViewController {
                 let serviceUuids = value as! [CBUUID]
                 advertisementString += "Solicited Service: \(value)\n"
                 for (cbuuid) in serviceUuids {
-                    advertisementString += "\t\(cbuuid.UUIDString)\n"
+                    advertisementString += "\t\(cbuuid.uuidString)\n"
                 }
                 
             default:
@@ -234,66 +234,66 @@ class PeripheralListViewController: NSViewController {
         let alert = NSAlert()
         alert.messageText = "Advertising packet data"
         alert.informativeText = advertisementString
-        alert.addButtonWithTitle(localizationManager.localizedString("dialog_ok"))
-        alert.alertStyle = .Warning
-        alert.beginSheetModalForWindow(self.view.window!, completionHandler: nil)
+        alert.addButton(withTitle: localizationManager.localizedString("dialog_ok"))
+        alert.alertStyle = .warning
+        alert.beginSheetModal(for: self.view.window!, completionHandler: nil)
     }
     
     // MARK: - Actions
-    @IBAction func onClickRefresh(sender: AnyObject) {
+    @IBAction func onClickRefresh(_ sender: AnyObject) {
         BleManager.sharedInstance.refreshPeripherals()
     }
     
-    @IBAction func onClickFilters(sender: AnyObject) {
+    @IBAction func onClickFilters(_ sender: AnyObject) {
         openFiltersPanel(!Preferences.scanFilterIsPanelOpen, animated: true)
     }
     
     
-    @IBAction func onEditFilterName(sender: AnyObject) {
-        let isEmpty = (sender.stringValue as String).stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceAndNewlineCharacterSet()).isEmpty
+    @IBAction func onEditFilterName(_ sender: AnyObject) {
+        let isEmpty = (sender.stringValue as String).trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).isEmpty
         peripheralList.filterName = isEmpty ? nil:sender.stringValue
         updateFilters()
     }
    
-    @IBAction func onClickFilterNameSettings(sender: AnyObject) {
+    @IBAction func onClickFilterNameSettings(_ sender: AnyObject) {
         filtersNameSearchField.window?.makeFirstResponder(filtersNameSearchField)           // Force first responder to the text field, so the menu is not grayed down if the text field was not previously selected
         
         let menu = NSMenu(title: "Settings")
         
-        menu.addItemWithTitle("Name contains", action: #selector(onFilterNameSettingsNameContains(_:)), keyEquivalent: "")
-        menu.addItemWithTitle("Name equals", action: #selector(onFilterNameSettingsNameEquals(_:)), keyEquivalent: "")
-        menu.addItem(NSMenuItem.separatorItem())
-        menu.addItemWithTitle("Matching case", action: #selector(onFilterNameSettingsMatchCase(_:)), keyEquivalent: "")
-        menu.addItemWithTitle("Ignoring case", action: #selector(onFilterNameSettingsIgnoreCase(_:)), keyEquivalent: "")
+        menu.addItem(withTitle: "Name contains", action: #selector(onFilterNameSettingsNameContains(_:)), keyEquivalent: "")
+        menu.addItem(withTitle: "Name equals", action: #selector(onFilterNameSettingsNameEquals(_:)), keyEquivalent: "")
+        menu.addItem(NSMenuItem.separator())
+        menu.addItem(withTitle: "Matching case", action: #selector(onFilterNameSettingsMatchCase(_:)), keyEquivalent: "")
+        menu.addItem(withTitle: "Ignoring case", action: #selector(onFilterNameSettingsIgnoreCase(_:)), keyEquivalent: "")
         //NSMenu.popUpContextMenu(menu, withEvent: NSEvent(), forView: view)
         
         let selectedOption0 = peripheralList.isFilterNameExact ? 1:0
-        menu.itemAtIndex(selectedOption0)!.offStateImage = NSImage(named: "NSMenuOnStateTemplate")
+        menu.item(at: selectedOption0)!.offStateImage = NSImage(named: "NSMenuOnStateTemplate")
         let selectedOption1 = peripheralList.isFilterNameCaseInsensitive ? 4:3
-        menu.itemAtIndex(selectedOption1)!.offStateImage = NSImage(named: "NSMenuOnStateTemplate")
+        menu.item(at: selectedOption1)!.offStateImage = NSImage(named: "NSMenuOnStateTemplate")
         
-        menu.popUpMenuPositioningItem(nil, atLocation: NSEvent.mouseLocation(), inView: nil)
+        menu.popUp(positioning: nil, at: NSEvent.mouseLocation(), in: nil)
     }
     
     
-    @IBAction func onFilterRssiChanged(sender: NSSlider) {
+    @IBAction func onFilterRssiChanged(_ sender: NSSlider) {
         let rssiValue = -sender.integerValue
         peripheralList.rssiFilterValue = rssiValue
         updateRssiValueLabel()
         updateFilters()
     }
     
-    @IBAction func onFilterOnlyUartChanged(sender: NSButton) {
+    @IBAction func onFilterOnlyUartChanged(_ sender: NSButton) {
         peripheralList.isOnlyUartEnabled = sender.state == NSOnState
         updateFilters()
     }
     
-    @IBAction func onFilterUnnamedChanged(sender: AnyObject) {
+    @IBAction func onFilterUnnamedChanged(_ sender: AnyObject) {
         peripheralList.isUnnamedEnabled = sender.state == NSOnState
         updateFilters()
     }
     
-    @IBAction func onClickRemoveFilters(sender: AnyObject) {
+    @IBAction func onClickRemoveFilters(_ sender: AnyObject) {
         peripheralList.setDefaultFilters()
         filtersNameSearchField.stringValue = peripheralList.filterName ?? ""
         setRssiSliderValue(peripheralList.rssiFilterValue)
@@ -305,16 +305,16 @@ class PeripheralListViewController: NSViewController {
 
 // MARK: - NSTableViewDataSource
 extension PeripheralListViewController : NSTableViewDataSource {
-    func numberOfRowsInTableView(tableView: NSTableView) -> Int {
+    func numberOfRows(in tableView: NSTableView) -> Int {
         return peripheralList.filteredPeripherals(true).count
     }
 }
 
 // MARK: NSTableViewDelegate
 extension PeripheralListViewController : NSTableViewDelegate {
-    func tableView(tableView: NSTableView, viewForTableColumn tableColumn: NSTableColumn?, row: Int) -> NSView? {
+    func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         
-        let cell = tableView.makeViewWithIdentifier("PeripheralCell", owner: self) as! PeripheralTableCellView
+        let cell = tableView.make(withIdentifier: "PeripheralCell", owner: self) as! PeripheralTableCellView
         
         let bleManager = BleManager.sharedInstance
         let blePeripheralsFound = bleManager.blePeripherals()
@@ -328,7 +328,7 @@ extension PeripheralListViewController : NSTableViewDelegate {
             cell.titleTextField.stringValue = name
             
             let isUartCapable = blePeripheral.isUartAdvertised()
-            cell.hasUartView.hidden = !isUartCapable
+            cell.hasUartView.isHidden = !isUartCapable
             cell.subtitleTextField.stringValue = ""
             //cell.subtitleTextField.stringValue = localizationManager.localizedString(isUartCapable ? "peripherallist_uartavailable" : "peripherallist_uartunavailable")
             cell.rssiImageView.image = signalImageForRssi(blePeripheral.rssi)
@@ -347,12 +347,12 @@ extension PeripheralListViewController : NSTableViewDelegate {
         return cell;
     }
     
-    func tableViewSelectionIsChanging(notification: NSNotification) {   // Note: used tableViewSelectionIsChanging instead of tableViewSelectionDidChange because if a didDiscoverPeripheral notification arrives when the user is changing the row but before the user releases the mouse button, then it would be cancelled (and the user would notice that something weird happened)
+    func tableViewSelectionIsChanging(_ notification: Notification) {   // Note: used tableViewSelectionIsChanging instead of tableViewSelectionDidChange because if a didDiscoverPeripheral notification arrives when the user is changing the row but before the user releases the mouse button, then it would be cancelled (and the user would notice that something weird happened)
         
         peripheralSelectedChanged()
     }
 
-    func tableViewSelectionDidChange(notification: NSNotification) {
+    func tableViewSelectionDidChange(_ notification: Notification) {
         peripheralSelectedChanged()
     }
 

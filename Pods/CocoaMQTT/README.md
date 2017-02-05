@@ -1,13 +1,13 @@
 CocoaMQTT
 =========
 
-MQTT v3.1.1 client library for iOS and OS X written with Swift 2
+MQTT v3.1.1 client library for iOS and OS X written with Swift 3
 
 
 Build
 =====
 
-Build with Xcode 7.0 / Swift 2
+Build with Xcode 8.0 / Swift 3
 
 
 Installation
@@ -61,17 +61,15 @@ Usage
 Example in Example project:
 
 ```swift
-let mqttCli = CocoaMQTTCli()
-let clientIdPid = "CocoaMQTT-" + String(NSProcessInfo().processIdentifier)
-let mqtt = CocoaMQTT(clientId: clientIdPid, host: "localhost", port: 1883)
+let clientID = "CocoaMQTT-" + String(NSProcessInfo().processIdentifier)
+let mqtt = CocoaMQTT(clientID: clientID, host: "localhost", port: 1883)
 mqtt.username = "test"
 mqtt.password = "public"
 mqtt.willMessage = CocoaMQTTWill(topic: "/will", message: "dieout")
 mqtt.keepAlive = 90
-mqtt.delegate = mqttCli
+mqtt.delegate = self
 mqtt.connect()
 
-dispatch_main()
 ```
 
 

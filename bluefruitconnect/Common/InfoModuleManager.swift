@@ -12,26 +12,26 @@ import Foundation
 class InfoModuleManager: NSObject {
     
     
-    static func parseDescriptorValue(descriptor: CBDescriptor) -> NSData? {
-        var result: NSData?
+    static func parseDescriptorValue(_ descriptor: CBDescriptor) -> Data? {
+        var result: Data?
         
-        let identifier = descriptor.UUID.UUIDString
+        let identifier = descriptor.uuid.uuidString
         switch identifier {
         case CBUUIDCharacteristicExtendedPropertiesString, CBUUIDClientCharacteristicConfigurationString, CBUUIDServerCharacteristicConfigurationString:      // is an NSNumber
             // Note: according to the docs this should be an NSNumber, but it seems that is recognized as an NSData. So an NSData check is performed if the NSNumber check fails
             if let value = descriptor.value as? NSNumber {
-                result = value.stringValue.dataUsingEncoding(NSUTF8StringEncoding)
+                result = value.stringValue.data(using: String.Encoding.utf8)
             }
-            else if let value = descriptor.value as? NSData {
+            else if let value = descriptor.value as? Data {
                 result = value
             }
         case CBUUIDCharacteristicUserDescriptionString:         // is an NSString
             if let value = descriptor.value as? String {
-                result = value.dataUsingEncoding(NSUTF8StringEncoding)
+                result = value.data(using: String.Encoding.utf8)
             }
             
         case CBUUIDCharacteristicFormatString, CBUUIDCharacteristicAggregateFormatString:
-            result = descriptor.value as? NSData
+            result = descriptor.value as? Data
             
         default:
             break

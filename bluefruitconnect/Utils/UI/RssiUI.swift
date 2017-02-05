@@ -15,7 +15,7 @@ import Foundation
     
 #endif
 
-func signalImageForRssi(rssi:Int) -> Image {
+func signalImageForRssi(_ rssi:Int) -> Image {
     
     var index : Int
     

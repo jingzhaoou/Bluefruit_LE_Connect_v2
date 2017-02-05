@@ -11,45 +11,45 @@
 import Foundation
 
 protocol PinIOModuleManagerDelegate: class {
-    func onPinIODidEndPinQuery(isDefaultConfigurationAssumed: Bool)
+    func onPinIODidEndPinQuery(_ isDefaultConfigurationAssumed: Bool)
     func onPinIODidReceivePinState()
 }
 
 class PinIOModuleManager: NSObject {
     // Config
-    private let CAPABILITY_QUERY_TIMEOUT = 5.0      // in seconds
+    fileprivate let CAPABILITY_QUERY_TIMEOUT = 5.0      // in seconds
     
     // Constants
-    private let SYSEX_START: UInt8 = 0xF0
-    private let SYSEX_END: UInt8 = 0xF7
+    fileprivate let SYSEX_START: UInt8 = 0xF0
+    fileprivate let SYSEX_END: UInt8 = 0xF7
     
-    private let DEFAULT_PINS_COUNT = 20
-    private let FIRST_DIGITAL_PIN = 3
-    private let LAST_DIGITAL_PIN = 8
-    private let FIRST_ANALOG_PIN = 14
-    private let LAST_ANALOG_PIN = 19
+    fileprivate let DEFAULT_PINS_COUNT = 20
+    fileprivate let FIRST_DIGITAL_PIN = 3
+    fileprivate let LAST_DIGITAL_PIN = 8
+    fileprivate let FIRST_ANALOG_PIN = 14
+    fileprivate let LAST_ANALOG_PIN = 19
     
     // Types
     enum UartStatus {
-        case InputOutput           // Default mode (sending and receiving pin data)
-        case QueryCapabilities
-        case QueryAnalogMapping
+        case inputOutput           // Default mode (sending and receiving pin data)
+        case queryCapabilities
+        case queryAnalogMapping
     }
 
     class PinData {
         enum Mode: UInt8 {
-            case Unknown = 255
-            case Input = 0          // Don't chage the values (these are the bytes defined by firmata spec)
-            case Output = 1
+            case unknown = 255
+            case input = 0          // Don't chage the values (these are the bytes defined by firmata spec)
+            case output = 1
             
-            case Analog = 2
-            case PWM = 3
-            case Servo = 4
+            case analog = 2
+            case pwm = 3
+            case servo = 4
         }
         
         enum DigitalValue: Int{
-            case Low = 0
-            case High = 1
+            case low = 0
+            case high = 1
         }
         
         var digitalPinId: Int = -1
@@ -59,8 +59,8 @@ class PinIOModuleManager: NSObject {
         var isAnalog: Bool
         var isPWM: Bool
         
-        var mode = Mode.Input
-        var digitalValue =  DigitalValue.Low
+        var mode = Mode.input
+        var digitalValue =  DigitalValue.low
         var analogValue: Int = 0
         
         init(digitalPinId: Int, isDigital: Bool, isAnalog: Bool, isPWM: Bool) {
@@ -72,8 +72,8 @@ class PinIOModuleManager: NSObject {
     }
 
     // Data
-    private var uartStatus = UartStatus.InputOutput
-    private var queryCapabilitiesTimer : NSTimer?
+    fileprivate var uartStatus = UartStatus.inputOutput
+    fileprivate var queryCapabilitiesTimer : Timer?
 
     var pins = [PinData]()
 
@@ -96,35 +96,35 @@ class PinIOModuleManager: NSObject {
     }
 
     func isQueryingCapabilities() -> Bool {
-        return uartStatus != .InputOutput
+        return uartStatus != .inputOutput
     }
 
     func start() {
         DLog("pinio start");
-        let notificationCenter =  NSNotificationCenter.defaultCenter()
-        notificationCenter.addObserver(self, selector: #selector(PinIOModuleManager.didReceiveData(_:)), name: UartManager.UartNotifications.DidReceiveData.rawValue, object: nil)
+        let notificationCenter =  NotificationCenter.default
+        notificationCenter.addObserver(self, selector: #selector(PinIOModuleManager.didReceiveData(_:)), name: NSNotification.Name(rawValue: UartManager.UartNotifications.DidReceiveData.rawValue), object: nil)
     }
 
     func stop() {
         DLog("pinio stop");
-        let notificationCenter =  NSNotificationCenter.defaultCenter()
-        notificationCenter.removeObserver(self, name: UartManager.UartNotifications.DidReceiveData.rawValue, object: nil)
+        let notificationCenter =  NotificationCenter.default
+        notificationCenter.removeObserver(self, name: NSNotification.Name(rawValue: UartManager.UartNotifications.DidReceiveData.rawValue), object: nil)
 
         // Cancel pending queries
         cancelQueryCapabilitiesTimer()
     }
 
     // MARK: Notifications
-    func didReceiveData(notification: NSNotification) {
+    func didReceiveData(_ notification: Notification) {
         if let dataChunk = notification.userInfo?["dataChunk"] as? UartDataChunk {
                    //   DLog("pin io received: \(hexString(dataChunk.data))")
             switch uartStatus {
-            case .QueryCapabilities:
-                receivedQueryCapabilities(dataChunk.data)
-            case .QueryAnalogMapping:
-                receivedAnalogMapping(dataChunk.data)
+            case .queryCapabilities:
+                receivedQueryCapabilities(dataChunk.data as Data)
+            case .queryAnalogMapping:
+                receivedAnalogMapping(dataChunk.data as Data)
             default:
-                receivedPinState(dataChunk.data)
+                receivedPinState(dataChunk.data as Data)
                 break
             }
         }
@@ -132,37 +132,37 @@ class PinIOModuleManager: NSObject {
 
     // MARK: - Query Capabilities
     func reset() {
-        uartStatus == .InputOutput
+        uartStatus == .inputOutput
         pins = []
 
         // Reset Firmata
         let bytes:[UInt8] = [0xff]
-        let data = NSData(bytes: bytes, length: bytes.count)
+        let data = Data(bytes: UnsafePointer<UInt8>(bytes), count: bytes.count)
         UartManager.sharedInstance.sendData(data)
     }
     
-    private var queryCapabilitiesDataBuffer = [UInt8]()
+    fileprivate var queryCapabilitiesDataBuffer = [UInt8]()
     func queryCapabilities() {
         DLog("queryCapabilities")
 
         // Set status
         pins = []
-        self.uartStatus = .QueryCapabilities
+        self.uartStatus = .queryCapabilities
         self.queryCapabilitiesDataBuffer.removeAll()
 
         // Query Capabilities
         let bytes:[UInt8] = [SYSEX_START, 0x6B, SYSEX_END]
-        let data = NSData(bytes: bytes, length: bytes.count)
+        let data = Data(bytes: UnsafePointer<UInt8>(bytes), count: bytes.count)
         UartManager.sharedInstance.sendData(data)
         
-        self.queryCapabilitiesTimer = NSTimer.scheduledTimerWithTimeInterval(self.CAPABILITY_QUERY_TIMEOUT, target: self, selector: #selector(PinIOModuleManager.cancelQueryCapabilities), userInfo: nil, repeats: false)
+        self.queryCapabilitiesTimer = Timer.scheduledTimer(timeInterval: self.CAPABILITY_QUERY_TIMEOUT, target: self, selector: #selector(PinIOModuleManager.cancelQueryCapabilities), userInfo: nil, repeats: false)
     }
 
-    private func receivedQueryCapabilities(data: NSData) {
+    fileprivate func receivedQueryCapabilities(_ data: Data) {
 
         // Read received packet
-        var dataBytes = [UInt8](count: data.length, repeatedValue: 0)
-        data.getBytes(&dataBytes, length: data.length)
+        var dataBytes = [UInt8](repeating: 0, count: data.count)
+        (data as NSData).getBytes(&dataBytes, length: data.count)
 
         for byte in dataBytes {
             queryCapabilitiesDataBuffer.append(byte)
@@ -174,33 +174,33 @@ class PinIOModuleManager: NSObject {
         }
     }
  
-    private func cancelQueryCapabilitiesTimer() {
+    fileprivate func cancelQueryCapabilitiesTimer() {
         queryCapabilitiesTimer?.invalidate()
         queryCapabilitiesTimer = nil
     }
 
     // MARK: - Query AnalogMapping
-    private var queryAnalogMappingDataBuffer = [UInt8]()
+    fileprivate var queryAnalogMappingDataBuffer = [UInt8]()
     
-    private func queryAnalogMapping() {
+    fileprivate func queryAnalogMapping() {
         DLog("queryAnalogMapping")
         
         // Set status
-        self.uartStatus = .QueryAnalogMapping
+        self.uartStatus = .queryAnalogMapping
         self.queryAnalogMappingDataBuffer.removeAll()
         
         // Query Analog Mapping
         let bytes:[UInt8] = [self.SYSEX_START, 0x69, self.SYSEX_END]
-        let data = NSData(bytes: bytes, length: bytes.count)
+        let data = Data(bytes: UnsafePointer<UInt8>(bytes), count: bytes.count)
         UartManager.sharedInstance.sendData(data)
     }
     
-    private func receivedAnalogMapping(data: NSData) {
+    fileprivate func receivedAnalogMapping(_ data: Data) {
         cancelQueryCapabilitiesTimer()
 
         // Read received packet
-        var dataBytes = [UInt8](count: data.length, repeatedValue: 0)
-        data.getBytes(&dataBytes, length: data.length)
+        var dataBytes = [UInt8](repeating: 0, count: data.count)
+        (data as NSData).getBytes(&dataBytes, length: data.count)
         
         for byte in dataBytes {
             queryAnalogMappingDataBuffer.append(byte)
@@ -219,9 +219,9 @@ class PinIOModuleManager: NSObject {
     
     
     // MARK: - Process Capabilities
-    func endPinQuery(abortQuery: Bool) {
+    func endPinQuery(_ abortQuery: Bool) {
         cancelQueryCapabilitiesTimer()
-        uartStatus = .InputOutput
+        uartStatus = .inputOutput
         
         var capabilitiesParsed = false
         var mappingDataParsed = false
@@ -244,8 +244,8 @@ class PinIOModuleManager: NSObject {
         delegate?.onPinIODidEndPinQuery(isDefaultConfigurationAssumed)
     }
     
-    private func parseCapabilities(cababilitiesData : [UInt8]) -> Bool {
-        let endIndex = cababilitiesData.indexOf(SYSEX_END)
+    fileprivate func parseCapabilities(_ cababilitiesData : [UInt8]) -> Bool {
+        let endIndex = cababilitiesData.index(of: SYSEX_END)
         guard cababilitiesData.count > 2 && cababilitiesData[0] == SYSEX_START && cababilitiesData[1] == 0x6C && endIndex != nil else {
             DLog("invalid capabilities received")
             return false
@@ -311,8 +311,8 @@ class PinIOModuleManager: NSObject {
         return true
     }
     
-    private func parseAnalogMappingData(analogData : [UInt8]) -> Bool {
-        let endIndex = analogData.indexOf(SYSEX_END)
+    fileprivate func parseAnalogMappingData(_ analogData : [UInt8]) -> Bool {
+        let endIndex = analogData.index(of: SYSEX_END)
         guard analogData.count > 2 && analogData[0] == SYSEX_START && analogData[1] == 0x6A && endIndex != nil else {
             DLog("invalid analog mapping received")
             return false
@@ -336,20 +336,20 @@ class PinIOModuleManager: NSObject {
         return true
     }
     
-    private func indexOfPinWithDigitalId(digitalPinId: Int) -> Int? {
-        return pins.indexOf { (pin) -> Bool in
+    fileprivate func indexOfPinWithDigitalId(_ digitalPinId: Int) -> Int? {
+        return pins.index { (pin) -> Bool in
             pin.digitalPinId == digitalPinId
         }
     }
     
-    private func indexOfPinWithAnalogId(analogPinId: Int) -> Int? {
-        return pins.indexOf { (pin) -> Bool in
+    fileprivate func indexOfPinWithAnalogId(_ analogPinId: Int) -> Int? {
+        return pins.index { (pin) -> Bool in
             pin.analogPinId == analogPinId
         }
     }
     
     // MARK: - Pin Management
-    private func initializeDefaultPins() {
+    fileprivate func initializeDefaultPins() {
         pins.removeAll()
         
         for i in 0..<DEFAULT_PINS_COUNT {
@@ -372,7 +372,7 @@ class PinIOModuleManager: NSObject {
     }
     
     
-    private func enableReadReports() {
+    fileprivate func enableReadReports() {
         
         //Enable Read Reports by port
         let ports:[UInt8] = [0,1,2]
@@ -380,7 +380,7 @@ class PinIOModuleManager: NSObject {
             let data0:UInt8 = 0xD0 + port        // start port 0 digital reporting (0xD0 + port#)
             let data1:UInt8 = 1                  // enable
             let bytes:[UInt8] = [data0, data1]
-            let data = NSData(bytes: bytes, length: 2)
+            let data = Data(bytes: UnsafePointer<UInt8>(bytes), count: 2)
             UartManager.sharedInstance.sendData(data)
         }
         
@@ -391,38 +391,38 @@ class PinIOModuleManager: NSObject {
         }
     }
     
-    func setControlMode(pin: PinData, mode: PinData.Mode) {
+    func setControlMode(_ pin: PinData, mode: PinData.Mode) {
         let previousMode = pin.mode
         
         // Store
         pin.mode = mode
-        pin.digitalValue = .Low     // Reset dialog value when chaning mode
+        pin.digitalValue = .low     // Reset dialog value when chaning mode
         pin.analogValue = 0         // Reset analog value when chaging mode
         
         //DLog("pin \(pin.digitalPinId): mode: \(pin.mode.rawValue)")
         
         // Write pin mode
         let bytes:[UInt8] = [0xf4, UInt8(pin.digitalPinId), mode.rawValue]
-        let data = NSData(bytes: bytes, length: bytes.count)
+        let data = Data(bytes: UnsafePointer<UInt8>(bytes), count: bytes.count)
         UartManager.sharedInstance.sendData(data)
         
         // Update reporting for Analog pins
-        if mode == .Analog {
+        if mode == .analog {
             setAnalogValueReporting(pin, enabled: true)
         }
-        else if previousMode == .Analog {
+        else if previousMode == .analog {
             setAnalogValueReporting(pin, enabled: false)
         }
     }
     
-    func setAnalogValueReporting(pin: PinData, enabled: Bool) {
+    func setAnalogValueReporting(_ pin: PinData, enabled: Bool) {
         // Write pin mode
         let bytes:[UInt8] = [0xC0 + UInt8(pin.analogPinId), UInt8(enabled ?1:0)]
-        let data = NSData(bytes: bytes, length: bytes.count)
+        let data = Data(bytes: UnsafePointer<UInt8>(bytes), count: bytes.count)
         UartManager.sharedInstance.sendData(data)
     }
     
-    func setDigitalValue(pin: PinData, value: PinData.DigitalValue) {
+    func setDigitalValue(_ pin: PinData, value: PinData.DigitalValue) {
         // Store
         pin.digitalValue = value
         DLog("setDigitalValue: \(value) for pin id: \(pin.digitalPinId)")
@@ -446,12 +446,12 @@ class PinIOModuleManager: NSObject {
         
 
         let bytes:[UInt8] = [data0, data1, data2]
-        let data = NSData(bytes: bytes, length: bytes.count)
+        let data = Data(bytes: UnsafePointer<UInt8>(bytes), count: bytes.count)
         UartManager.sharedInstance.sendData(data)
     }
     
-    private var lastSentAnalogValueTime : NSTimeInterval = 0
-    func setPMWValue(pin: PinData, value: Int) -> Bool {
+    fileprivate var lastSentAnalogValueTime : TimeInterval = 0
+    func setPMWValue(_ pin: PinData, value: Int) -> Bool {
         
         // Limit the amount of messages sent over Uart
         let currentTime = CACurrentMediaTime()
@@ -470,25 +470,25 @@ class PinIOModuleManager: NSObject {
         let data2 = UInt8(value >> 7)           //top bit in second byte
         
         let bytes:[UInt8] = [data0, data1, data2]
-        let data = NSData(bytes: bytes, length: bytes.count)
+        let data = Data(bytes: UnsafePointer<UInt8>(bytes), count: bytes.count)
         UartManager.sharedInstance.sendData(data)
         
         return true
     }
 
-    private var receivedPinStateDataBuffer = [UInt8]()
+    fileprivate var receivedPinStateDataBuffer = [UInt8]()
 
-    private func receivedPinState(data: NSData) {
+    fileprivate func receivedPinState(_ data: Data) {
         
         // Append received bytes to buffer
-        var receivedDataBytes = [UInt8](count: data.length, repeatedValue: 0)
-        data.getBytes(&receivedDataBytes, length: data.length)
+        var receivedDataBytes = [UInt8](repeating: 0, count: data.count)
+        (data as NSData).getBytes(&receivedDataBytes, length: data.count)
         for byte in receivedDataBytes {
             receivedPinStateDataBuffer.append(byte)
         }
         
         // Check if we received a pin state response
-        let endIndex = receivedPinStateDataBuffer.indexOf(SYSEX_END)
+        let endIndex = receivedPinStateDataBuffer.index(of: SYSEX_END)
         if receivedPinStateDataBuffer.count >= 5 && receivedPinStateDataBuffer[0] == SYSEX_START && receivedPinStateDataBuffer[1] == 0x6e && endIndex != nil {
             /* pin state response
             * -------------------------------
@@ -507,10 +507,10 @@ class PinIOModuleManager: NSObject {
             let pinMode = PinData.Mode(rawValue: receivedPinStateDataBuffer[3])
             let pinState = Int(receivedPinStateDataBuffer[4])
             
-            if let index = indexOfPinWithDigitalId(pinDigitalId), pinMode = pinMode {
+            if let index = indexOfPinWithDigitalId(pinDigitalId), let pinMode = pinMode {
                 let pin = pins[index]
                 pin.mode = pinMode
-                if (pinMode == .Analog || pinMode == .PWM || pinMode == .Servo) {
+                if (pinMode == .analog || pinMode == .pwm || pinMode == .servo) {
                     if receivedPinStateDataBuffer.count >= 6 {
                         let analogValue = pinState + (Int(receivedPinStateDataBuffer[5])<<7)
                         pin.analogValue = analogValue
@@ -597,7 +597,7 @@ class PinIOModuleManager: NSObject {
     }
     
     
-    private func updatePinsForReceivedStates(pinStates:Int, port:Int) {
+    fileprivate func updatePinsForReceivedStates(_ pinStates:Int, port:Int) {
         let offset = 8 * port
         
         // Iterate through all pins
@@ -607,7 +607,7 @@ class PinIOModuleManager: NSObject {
             
             let digitalId = offset + i
             
-            if let index = indexOfPinWithDigitalId(digitalId), digitalValue = PinData.DigitalValue(rawValue: state) {
+            if let index = indexOfPinWithDigitalId(digitalId), let digitalValue = PinData.DigitalValue(rawValue: state) {
                 let pin = pins[index]
                 pin.digitalValue = digitalValue
                 DLog("update pinid: \(digitalId) digitalValue: \(digitalValue)")
@@ -616,19 +616,19 @@ class PinIOModuleManager: NSObject {
     }
 
     // MARK: - Utils
-    static func stringForPinMode(mode: PinIOModuleManager.PinData.Mode)-> String {
+    static func stringForPinMode(_ mode: PinIOModuleManager.PinData.Mode)-> String {
         var modeString: String
 
         switch mode {
-        case .Input:
+        case .input:
             modeString = "Input"
-        case .Output:
+        case .output:
             modeString = "Output"
-        case .Analog:
+        case .analog:
             modeString = "Analog"
-        case .PWM:
+        case .pwm:
             modeString = "PWM"
-        case .Servo:
+        case .servo:
             modeString = "Servo"
         default:
             modeString = "Unkwnown"
@@ -637,13 +637,13 @@ class PinIOModuleManager: NSObject {
         return modeString
     }
     
-    static func stringForPinDigitalValue(digitalValue: PinIOModuleManager.PinData.DigitalValue)-> String {
+    static func stringForPinDigitalValue(_ digitalValue: PinIOModuleManager.PinData.DigitalValue)-> String {
         var valueString: String
         
         switch digitalValue {
-        case .Low:
+        case .low:
             valueString = "Low"
-        case .High:
+        case .high:
             valueString = "High"
         }
         return valueString

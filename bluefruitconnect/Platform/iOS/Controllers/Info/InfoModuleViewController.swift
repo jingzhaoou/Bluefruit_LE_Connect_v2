@@ -10,7 +10,7 @@ import UIKit
 
 class InfoModuleViewController: ModuleViewController {
     // Config
-    private static let kReadForbiddenCCCD = false     // Added to avoid generating a didModifyServices callback when reading Uart/DFU CCCD (bug??)
+    fileprivate static let kReadForbiddenCCCD = false     // Added to avoid generating a didModifyServices callback when reading Uart/DFU CCCD (bug??)
     
     // UI
     @IBOutlet weak var baseTableView: UITableView!
@@ -21,18 +21,18 @@ class InfoModuleViewController: ModuleViewController {
 //    var onInfoScanFinished: (() ->())?
     
     // Data
-    private let refreshControl = UIRefreshControl()
-    private var blePeripheral: BlePeripheral?
-    private var services: [CBService]?
-    private var itemDisplayMode = [String : DisplayMode]()
+    fileprivate let refreshControl = UIRefreshControl()
+    fileprivate var blePeripheral: BlePeripheral?
+    fileprivate var services: [CBService]?
+    fileprivate var itemDisplayMode = [String : DisplayMode]()
     
-    private var shouldDiscoverCharacteristics = Preferences.infoIsRefreshOnLoadEnabled
+    fileprivate var shouldDiscoverCharacteristics = Preferences.infoIsRefreshOnLoadEnabled
     
-    private var isDiscoveringServices = false
-    private var elementsToDiscover = 0
-    private var elementsDiscovered = 0
-    private var valuesToRead = 0
-    private var valuesRead = 0
+    fileprivate var isDiscoveringServices = false
+    fileprivate var elementsToDiscover = 0
+    fileprivate var elementsDiscovered = 0
+    fileprivate var valuesToRead = 0
+    fileprivate var valuesRead = 0
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -62,7 +62,7 @@ class InfoModuleViewController: ModuleViewController {
     }
 
     
-    override func viewWillAppear(animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
 
         if services == nil && !isDiscoveringServices {        // only the first time
@@ -103,25 +103,25 @@ class InfoModuleViewController: ModuleViewController {
         BleManager.sharedInstance.discover(blePeripheral!, serviceUUIDs: nil)
     }
     
-    func showWait(show: Bool) {
-        baseTableView.hidden = show
-        waitView.hidden = !show
+    func showWait(_ show: Bool) {
+        baseTableView.isHidden = show
+        waitView.isHidden = !show
     }
     
     // MARK: - Actions
-    @IBAction func onClickHelp(sender: UIBarButtonItem) {
+    @IBAction func onClickHelp(_ sender: UIBarButtonItem) {
         let localizationManager = LocalizationManager.sharedInstance
-        let helpViewController = storyboard!.instantiateViewControllerWithIdentifier("HelpViewController") as! HelpViewController
+        let helpViewController = storyboard!.instantiateViewController(withIdentifier: "HelpViewController") as! HelpViewController
         helpViewController.setHelp(localizationManager.localizedString("info_help_text"), title: localizationManager.localizedString("info_help_title"))
         let helpNavigationController = UINavigationController(rootViewController: helpViewController)
-        helpNavigationController.modalPresentationStyle = .Popover
+        helpNavigationController.modalPresentationStyle = .popover
         helpNavigationController.popoverPresentationController?.barButtonItem = sender
         
-        presentViewController(helpNavigationController, animated: true, completion: nil)
+        present(helpNavigationController, animated: true, completion: nil)
     }
     
     // MARK - Actions
-    func onTableRefresh(sender: AnyObject) {
+    func onTableRefresh(_ sender: AnyObject) {
         refreshControl.endRefreshing()
         discoverServices()
 //        baseTableView.reloadData()
@@ -129,7 +129,7 @@ class InfoModuleViewController: ModuleViewController {
         
     }
     
-    @IBAction func onClickRefresh(sender: AnyObject) {
+    @IBAction func onClickRefresh(_ sender: AnyObject) {
         discoverServices()
     }
     
@@ -137,12 +137,12 @@ class InfoModuleViewController: ModuleViewController {
 
 extension InfoModuleViewController: UITableViewDataSource {
     enum DisplayMode : Int {
-        case Auto = 0
-        case Text = 1
-        case Hex = 2
+        case auto = 0
+        case text = 1
+        case hex = 2
     }
     
-    func numberOfSectionsInTableView(tableView: UITableView) -> Int {
+    func numberOfSections(in tableView: UITableView) -> Int {
         // Services
         if let services = services {
             return services.count
@@ -152,7 +152,7 @@ extension InfoModuleViewController: UITableViewDataSource {
         }
     }
     
-    func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         let service = services![section]
         
         if let characteristics = service.characteristics {
@@ -171,13 +171,13 @@ extension InfoModuleViewController: UITableViewDataSource {
         }
     }
 
-    func tableView(tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         guard let service = services?[section] else {
             DLog("warning: titleForHeaderInSection service is nil")
             return nil
         }
         
-        var identifier = service.UUID.UUIDString
+        var identifier = service.uuid.uuidString
         if let name = BleUUIDNames.sharedInstance.nameForUUID(identifier) {
             identifier = name
         }
@@ -185,11 +185,11 @@ extension InfoModuleViewController: UITableViewDataSource {
         return identifier
     }
     
-    func tableView(tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
         return 60
     }
     
-    private func itemForIndexPath(indexPath: NSIndexPath) -> (Int, CBAttribute?, Bool) {
+    fileprivate func itemForIndexPath(_ indexPath: IndexPath) -> (Int, CBAttribute?, Bool) {
         let service = services![indexPath.section]
         
         // The same table view section is used for characteristics and descriptors. So first calculate if the current indexPath.row is for a characteristic or descriptor
@@ -232,18 +232,18 @@ extension InfoModuleViewController: UITableViewDataSource {
         return (currentCharacteristicIndex, currentItem, isDescriptor)
     }
     
-    func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 
-        guard let service = services?[indexPath.section] where service.characteristics != nil else {
+        guard let service = services?[indexPath.section], service.characteristics != nil else {
             DLog("warning: cellForRowAtIndexPath characteristics is nil")
-            return tableView.dequeueReusableCellWithIdentifier("CharacteristicCell", forIndexPath:indexPath)
+            return tableView.dequeueReusableCell(withIdentifier: "CharacteristicCell", for:indexPath)
         }
         
         let (currentCharacteristicIndex, currentItemOptional, isDescriptor) = itemForIndexPath(indexPath)
         
         guard let currentItem = currentItemOptional else  {
             DLog("warning: current item is nil")
-            return tableView.dequeueReusableCellWithIdentifier("CharacteristicCell", forIndexPath:indexPath)
+            return tableView.dequeueReusableCell(withIdentifier: "CharacteristicCell", for:indexPath)
             
         }
         
@@ -251,23 +251,23 @@ extension InfoModuleViewController: UITableViewDataSource {
         
         // Intanciate cell
         let reuseIdentifier = isDescriptor ? "DescriptorCell":"CharacteristicCell"
-        let cell = tableView.dequeueReusableCellWithIdentifier(reuseIdentifier, forIndexPath:indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: reuseIdentifier, for:indexPath)
 
         
         var identifier = ""
         var value = " "
-        var valueData: NSData?
+        var valueData: Data?
         if let characteristic = service.characteristics?[currentCharacteristicIndex] {
             
-            identifier = currentItem.UUID.UUIDString
+            identifier = currentItem.uuid.uuidString
             
             let displayModeIdentifier = "\(currentCharacteristicIndex)_\(identifier)"       // Descriptors in different characteristics could have the same CBUUID
-            var currentDisplayMode = DisplayMode.Auto
+            var currentDisplayMode = DisplayMode.auto
             if let displayMode = itemDisplayMode[displayModeIdentifier] {
                 currentDisplayMode = displayMode
             }
             else {
-                itemDisplayMode[displayModeIdentifier] = .Auto
+                itemDisplayMode[displayModeIdentifier] = .auto
             }
             
             if let name = BleUUIDNames.sharedInstance.nameForUUID(identifier) {
@@ -284,8 +284,8 @@ extension InfoModuleViewController: UITableViewDataSource {
             
             if valueData != nil {
                 switch currentDisplayMode {
-                case .Auto:
-                    if let characteristicString = NSString(data: valueData!, encoding: NSUTF8StringEncoding) as String? {
+                case .auto:
+                    if let characteristicString = NSString(data: valueData!, encoding: String.Encoding.utf8.rawValue) as String? {
                         if isStringPrintable(characteristicString) {
                             value = characteristicString
                         }
@@ -293,11 +293,11 @@ extension InfoModuleViewController: UITableViewDataSource {
                             value = hexString(valueData!)
                         }
                     }
-                case .Text:
-                    if let text = NSString(data:valueData!, encoding: NSUTF8StringEncoding) as? String {
+                case .text:
+                    if let text = NSString(data:valueData!, encoding: String.Encoding.utf8.rawValue) as? String {
                         value = text
                     }
-                case .Hex:
+                case .hex:
                     value = hexString(valueData!)
                 }
             }
@@ -306,27 +306,27 @@ extension InfoModuleViewController: UITableViewDataSource {
         let characteristicCell = cell as! InfoCharacteristicTableViewCell
         characteristicCell.titleLabel.text = identifier
         characteristicCell.subtitleLabel.text = valueData != nil ? value : LocalizationManager.sharedInstance.localizedString(isDescriptor ? "info_type_descriptor":"info_type_characteristic")
-        characteristicCell.subtitleLabel.textColor = valueData != nil ? UIColor.blackColor() : UIColor.lightGrayColor()
+        characteristicCell.subtitleLabel.textColor = valueData != nil ? UIColor.black : UIColor.lightGray
         
         return cell
     }
     
-    private func isStringPrintable(text: String) -> Bool {
+    fileprivate func isStringPrintable(_ text: String) -> Bool {
         //NSCharacterSet
         //let printableCharacterSet:NSCharacterSet = NSCharacterSet(charactersInString: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLKMNOPQRSTUVWXYZ0123456789")
         
-        let printableCharacterSet = NSCharacterSet.alphanumericCharacterSet()
-        let isPrintable  = text.rangeOfCharacterFromSet(printableCharacterSet) != nil
+        let printableCharacterSet = CharacterSet.alphanumerics
+        let isPrintable  = text.rangeOfCharacter(from: printableCharacterSet) != nil
         return isPrintable
     }
 }
 
 extension InfoModuleViewController: UITableViewDelegate {
-    func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
-        guard let service = services?[indexPath.section] where service.characteristics != nil else {
+        guard let service = services?[indexPath.section], service.characteristics != nil else {
             DLog("warning: didSelectRowAtIndexPath characteristics is nil")
-            tableView.deselectRowAtIndexPath(indexPath, animated: true)
+            tableView.deselectRow(at: indexPath, animated: true)
             return
         }
         
@@ -334,25 +334,25 @@ extension InfoModuleViewController: UITableViewDelegate {
         
         guard let currentItem = currentItemOptional else  {
             DLog("warning: current item is nil")
-            tableView.deselectRowAtIndexPath(indexPath, animated: true)
+            tableView.deselectRow(at: indexPath, animated: true)
             return
         }
         
         if let characteristic = service.characteristics?[currentCharacteristicIndex] {
             
-            let identifier = currentItem.UUID.UUIDString
+            let identifier = currentItem.uuid.uuidString
             let displayModeIdentifier = "\(currentCharacteristicIndex)_\(identifier)"       // Descriptors in different characteristics could have the same CBUUID
             if let displayMode =  itemDisplayMode[displayModeIdentifier] {
                 switch displayMode {
-                case .Text:
-                    itemDisplayMode[displayModeIdentifier] = .Hex
-                case .Hex:
-                    itemDisplayMode[displayModeIdentifier] = .Text
+                case .text:
+                    itemDisplayMode[displayModeIdentifier] = .hex
+                case .hex:
+                    itemDisplayMode[displayModeIdentifier] = .text
                 default:
                     
                     // Check if is printable
                     var isPrintable = false
-                    var valueData: NSData?
+                    var valueData: Data?
                     if isDescriptor {
                         let descriptor = currentItem as! CBDescriptor
                         valueData = InfoModuleManager.parseDescriptorValue(descriptor)
@@ -362,11 +362,11 @@ extension InfoModuleViewController: UITableViewDelegate {
                     }
                     
                     if let value = valueData {
-                        if let characteristicString = NSString(data:value, encoding: NSUTF8StringEncoding) as String? {
+                        if let characteristicString = NSString(data:value, encoding: String.Encoding.utf8.rawValue) as String? {
                             isPrintable = isStringPrintable(characteristicString)
                         }
                     }
-                    itemDisplayMode[displayModeIdentifier] = isPrintable ? .Hex: .Text
+                    itemDisplayMode[displayModeIdentifier] = isPrintable ? .hex: .text
                 }
             }
             
@@ -374,14 +374,14 @@ extension InfoModuleViewController: UITableViewDelegate {
             //tableView.reloadRowsAtIndexPaths([indexPath], withRowAnimation: .None)
         }
         
-        tableView.deselectRowAtIndexPath(indexPath, animated: true)
+        tableView.deselectRow(at: indexPath, animated: true)
     }
 }
 
 // MARK: - CBPeripheralDelegate
 extension InfoModuleViewController : CBPeripheralDelegate {
     
-    func peripheralDidUpdateName(peripheral: CBPeripheral) {
+    func peripheralDidUpdateName(_ peripheral: CBPeripheral) {
         DLog("centralManager peripheralDidUpdateName: \(peripheral.name != nil ? peripheral.name! : "")")
         /*
         dispatch_async(dispatch_get_main_queue(),{ [weak self] in
@@ -389,15 +389,15 @@ extension InfoModuleViewController : CBPeripheralDelegate {
             })
  */
     }
-    func peripheral(peripheral: CBPeripheral, didModifyServices invalidatedServices: [CBService]) {
+    func peripheral(_ peripheral: CBPeripheral, didModifyServices invalidatedServices: [CBService]) {
         DLog("centralManager didModifyServices: \(peripheral.name != nil ? peripheral.name! : "")")
         
-        dispatch_async(dispatch_get_main_queue(),{ [weak self] in
+        DispatchQueue.main.async(execute: { [weak self] in
             self?.discoverServices()
         })
     }
 
-    func peripheral(peripheral: CBPeripheral, didDiscoverServices error: NSError?) {
+    func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         isDiscoveringServices = false
 
         if services == nil {
@@ -410,8 +410,8 @@ extension InfoModuleViewController : CBPeripheralDelegate {
             // Order services so "DIS" is at the top (if present)
             let kDisServiceUUID = "180A"    // DIS service UUID
             if let unorderedServices = services {
-                services = unorderedServices.sort({ (serviceA, serviceB) -> Bool in
-                    let isServiceBDis = serviceB.UUID.isEqual(CBUUID(string: kDisServiceUUID))
+                services = unorderedServices.sorted(by: { (serviceA, serviceB) -> Bool in
+                    let isServiceBDis = serviceB.uuid.isEqual(CBUUID(string: kDisServiceUUID))
                     return !isServiceBDis
                 })
             }
@@ -421,7 +421,7 @@ extension InfoModuleViewController : CBPeripheralDelegate {
                 if let services = services {
                     for service in services {
                         elementsToDiscover += 1
-                        blePeripheral?.peripheral.discoverCharacteristics(nil, forService: service)
+                        blePeripheral?.peripheral.discoverCharacteristics(nil, for: service)
                     }
                 }
             }
@@ -431,7 +431,7 @@ extension InfoModuleViewController : CBPeripheralDelegate {
             }*/
             
             // Update UI
-            dispatch_async(dispatch_get_main_queue(),{ [unowned self] in
+            DispatchQueue.main.async(execute: { [unowned self] in
  
                 //self.updateDiscoveringStatusLabel()
                 self.baseTableView?.reloadData()
@@ -441,7 +441,7 @@ extension InfoModuleViewController : CBPeripheralDelegate {
         }
     }
 
-    func peripheral(peripheral: CBPeripheral, didDiscoverCharacteristicsForService service: CBService, error: NSError?) {
+    func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
         //DLog("centralManager didDiscoverCharacteristicsForService: \(service.UUID.UUIDString)")
         
         elementsDiscovered += 1
@@ -449,22 +449,22 @@ extension InfoModuleViewController : CBPeripheralDelegate {
         if let characteristics = service.characteristics {
 
             for characteristic in characteristics {
-                if (characteristic.properties.rawValue & CBCharacteristicProperties.Read.rawValue != 0) {
+                if (characteristic.properties.rawValue & CBCharacteristicProperties.read.rawValue != 0) {
                     valuesToRead += 1
-                    peripheral.readValueForCharacteristic(characteristic)
+                    peripheral.readValue(for: characteristic)
                 }
                 
                 //elementsToDiscover += 1       // Dont add descriptors to elementsToDiscover because the number of descriptors found is unknown
-                blePeripheral?.peripheral.discoverDescriptorsForCharacteristic(characteristic)
+                blePeripheral?.peripheral.discoverDescriptors(for: characteristic)
             }
         }
         
-        dispatch_async(dispatch_get_main_queue(),{ [unowned self] in
+        DispatchQueue.main.async(execute: { [unowned self] in
             self.baseTableView?.reloadData()
             })
     }
 
-    func peripheral(peripheral: CBPeripheral, didDiscoverDescriptorsForCharacteristic characteristic: CBCharacteristic, error: NSError?) {
+    func peripheral(_ peripheral: CBPeripheral, didDiscoverDescriptorsFor characteristic: CBCharacteristic, error: Error?) {
         
         //DLog("centralManager didDiscoverDescriptorsForCharacteristic: \(characteristic.UUID.UUIDString)")
         //elementsDiscovered += 1
@@ -472,17 +472,17 @@ extension InfoModuleViewController : CBPeripheralDelegate {
         if let descriptors = characteristic.descriptors {
             for descriptor in descriptors {
                 
-                let isAForbiddenCCCD = descriptor.UUID.UUIDString.caseInsensitiveCompare("2902") == .OrderedSame && (characteristic.UUID.UUIDString.caseInsensitiveCompare(UartManager.RxCharacteristicUUID) == .OrderedSame || characteristic.UUID.UUIDString.caseInsensitiveCompare(dfuControlPointCharacteristicUUIDString) == .OrderedSame)
+                let isAForbiddenCCCD = descriptor.uuid.uuidString.caseInsensitiveCompare("2902") == .orderedSame && (characteristic.uuid.uuidString.caseInsensitiveCompare(UartManager.RxCharacteristicUUID) == .orderedSame || characteristic.uuid.uuidString.caseInsensitiveCompare(dfuControlPointCharacteristicUUIDString) == .orderedSame)
                 if InfoModuleViewController.kReadForbiddenCCCD || !isAForbiddenCCCD {
                     
                     valuesToRead += 1
-                    peripheral.readValueForDescriptor(descriptor)
+                    peripheral.readValue(for: descriptor)
                 }
             }
         }
         
         if (self.elementsDiscovered == self.elementsToDiscover) {
-            dispatch_async(dispatch_get_main_queue(),{ [unowned self] in
+            DispatchQueue.main.async(execute: { [unowned self] in
                 self.baseTableView?.reloadData()
                 })
         }
@@ -496,28 +496,28 @@ extension InfoModuleViewController : CBPeripheralDelegate {
  */
     }
     
-    func peripheral(peripheral: CBPeripheral, didUpdateValueForCharacteristic characteristic: CBCharacteristic, error: NSError?) {
+    func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
         //DLog("centralManager didUpdateValueForCharacteristic: \(characteristic.UUID.UUIDString)")
         
         valuesRead += 1
         
         if (self.elementsDiscovered >= self.elementsToDiscover) {
-            dispatch_async(dispatch_get_main_queue(),{ [unowned self] in
+            DispatchQueue.main.async(execute: { [unowned self] in
                 //self.updateDiscoveringStatusLabel()
                 self.baseTableView?.reloadData()
                 })
         }
     }
     
-    func peripheral(peripheral: CBPeripheral, didUpdateValueForDescriptor descriptor: CBDescriptor, error: NSError?) {
+    func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor descriptor: CBDescriptor, error: Error?) {
         //DLog("centralManager didUpdateValueForDescriptor: \(descriptor.UUID.UUIDString)")
         valuesRead += 1
         
-        DLog("didUpdateValueForDescriptor: \(descriptor.UUID.UUIDString) characteristic: \(descriptor.characteristic.UUID.UUIDString)")
+        DLog("didUpdateValueForDescriptor: \(descriptor.uuid.uuidString) characteristic: \(descriptor.characteristic.uuid.uuidString)")
         
 //        DLog("disco \(self.elementsDiscovered)/\(self.elementsToDiscover)")
         if (self.elementsDiscovered >= self.elementsToDiscover) {
-            dispatch_async(dispatch_get_main_queue(),{ [unowned self] in
+            DispatchQueue.main.async(execute: { [unowned self] in
                 //self.updateDiscoveringStatusLabel()
                 self.baseTableView?.reloadData()
                 })

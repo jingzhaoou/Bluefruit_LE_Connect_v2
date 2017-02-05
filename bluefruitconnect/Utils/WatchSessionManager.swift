@@ -31,40 +31,40 @@ class WatchSessionManager {
     var session: WCSession?
     
     //
-    func activateWithDelegate(delegate: WCSessionDelegate?) {
+    func activateWithDelegate(_ delegate: WCSessionDelegate?) {
         if(WCSession.isSupported()){
             DLog("watchSession setup")
-            session = WCSession.defaultSession()
+            session = WCSession.default()
             session!.delegate = delegate
-            session!.activateSession()
+            session!.activate()
         }
     }
     
     // MARK: - iOS Specific
 #if os(iOS)
-    func updateApplicationContext(mode: Mode) {
-        guard let session = WatchSessionManager.sharedInstance.session where session.paired && session.watchAppInstalled else {
+    func updateApplicationContext(_ mode: Mode) {
+        guard let session = WatchSessionManager.sharedInstance.session, session.isPaired && session.isWatchAppInstalled else {
             return
         }
     
         if #available(iOS 9.3, *) {
-            guard session.activationState == .Activated else {
+            guard session.activationState == .activated else {
                 return
             }
         }
     
         do {
             let bleFoundPeripherals = BleManager.sharedInstance.blePeripheralsCount()
-            var appContext: [String: AnyObject] = ["mode": mode.rawValue, "bleFoundPeripherals": bleFoundPeripherals]
+            var appContext: [String: AnyObject] = ["mode": mode.rawValue as AnyObject, "bleFoundPeripherals": bleFoundPeripherals as AnyObject]
             
             if let bleConnectedPeripheral = BleManager.sharedInstance.blePeripheralConnected {
-                appContext["bleConnectedPeripheralName"] = bleConnectedPeripheral.name
-                appContext["bleHasUart"] = bleConnectedPeripheral.isUartAdvertised()
+                appContext["bleConnectedPeripheralName"] = bleConnectedPeripheral.name as AnyObject?
+                appContext["bleHasUart"] = bleConnectedPeripheral.isUartAdvertised() as AnyObject?
             }
             try session.updateApplicationContext(appContext)
         }
         catch {
-            //DLog("updateApplicationContext error")
+            DLog("updateApplicationContext error")
         }
     }
 #endif
